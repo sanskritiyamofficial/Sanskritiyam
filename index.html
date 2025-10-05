@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Devotional Platform - Sanskritiyam</title>
+    <link rel="icon" type="image/x-icon" href="/assets/img/sanskritiyam.png" />
+
+    <!-- Meta Pixel Code -->
+    <script>
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod
+            ? n.callMethod.apply(n, arguments)
+            : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = "2.0";
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(
+        window,
+        document,
+        "script",
+        "https://connect.facebook.net/en_US/fbevents.js"
+      );
+      fbq("init", "808518914545478");
+      fbq("track", "PageView");
+    </script>
+    <!-- Google Tag Manager -->
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-W9L6JFR6");
+    </script>
+    <!-- End Google Tag Manager -->
+    <!-- End Meta Pixel Code -->
+    <script type="text/javascript">
+      (function (c, l, a, r, i, t, y) {
+        c[a] =
+          c[a] ||
+          function () {
+            (c[a].q = c[a].q || []).push(arguments);
+          };
+        t = l.createElement(r);
+        t.async = 1;
+        t.src = "https://www.clarity.ms/tag/" + i;
+        y = l.getElementsByTagName(r)[0];
+        y.parentNode.insertBefore(t, y);
+      })(window, document, "clarity", "script", "nsotq330nv");
+    </script>
+    <meta
+      name="google-site-verification"
+      content="Q4EY1lRrBj7IpLx8J81EhAf2w7A09bPJ_YQfp0PQTyI"
+    />
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-YR17GX23FH");
+    </script>
+
+    <script>
+      function trackEvent(eventName) {
+        window.dataLayer = window.dataLayer || [];
+        dataLayer.push({
+          event: "event",
+          eventName: eventName,
+        });
+        console.log("Event tracked:", eventName);
+
+        window.dataLayer.push({
+          event: "page_view",
+          page_path: window.location.pathname,
+        });
+        console.log("Page view tracked:", window.location.pathname);
+
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "viewpuja_item",
+          ecommerce: {
+            items: [
+              {
+                item_name: "Maa Mangala Gauri Mandir",
+                item_id:
+                  document
+                    .querySelector("[data-mandir-id]")
+                    ?.getAttribute("data-mandir-id") || null,
+                mandir_name:
+                  document
+                    .querySelector("[data-mandir]")
+                    ?.getAttribute("data-mandir") || null,
+                category: "Temple",
+                destination_url:
+                  document
+                    .querySelector("[data-page-url]")
+                    ?.getAttribute("data-page-url") || null,
+              },
+            ],
+          },
+        });
+        console.log("Data layer pushed:", {
+          item_name: "Maa Mangala Gauri Mandir",
+          item_id:
+            document
+              .querySelector("[data-mandir-id]")
+              ?.getAttribute("data-mandir-id") || null,
+          mandir_name:
+            document
+              .querySelector("[data-mandir]")
+              ?.getAttribute("data-mandir") || null,
+          category: "Temple",
+          destination_url:
+            document
+              .querySelector("[data-page-url]")
+              ?.getAttribute("data-page-url") || null,
+        });
+      }
+      function viewMandirListEvent() {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "view_mandir_list",
+          category: "Puja Booking",
+          action: "Clicked Book Pujas",
+          label: "Homepage - View Mandir List",
+        });
+
+        console.log("✅ Data Layer Event Pushed: view_mandir_list");
+      }
+
+      function bookChadhavasEvent() {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: "book_chadhavas",
+          category: "Chadhavas",
+          action: "Clicked Book Chadhavas",
+          label: "Homepage - Book Chadhavas",
+        });
+
+        console.log("✅ Data Layer Event Pushed: book_chadhavas");
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-W9L6JFR6"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <!-- Facebook Pixel (noscript) -->
+    <noscript
+      ><img
+        height="1"
+        width="1"
+        style="display: none"
+        src="https://www.facebook.com/tr?id=808518914545478&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Facebook Pixel (noscript) -->
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
