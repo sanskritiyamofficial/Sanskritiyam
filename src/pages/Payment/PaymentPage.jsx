@@ -22,7 +22,7 @@ const PaymentPage = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    gotra: "Kashyap",
+    gotra: "",
     email: "",
     phone: "",
     address: "",
@@ -50,12 +50,16 @@ const PaymentPage = () => {
     const savedCartItems = localStorage.getItem("cartItems");
     const savedPackage = localStorage.getItem("selectedPackage");
     const savedTempleData = localStorage.getItem("templeData");
+    const savedOrderId = localStorage.getItem("orderId");
+    const savedPaymentId = localStorage.getItem("paymentId");
 
     if (savedTotal) setTotalAmount(parseInt(savedTotal));
     if (savedEventName) setEventName(savedEventName);
     if (savedCartItems) setCartItems(JSON.parse(savedCartItems));
     if (savedPackage) setSelectedPackage(JSON.parse(savedPackage));
     if (savedTempleData) setTempleData(JSON.parse(savedTempleData));
+    if (savedOrderId) setOrderId(savedOrderId);
+    if (savedPaymentId) setPaymentId(savedPaymentId);
   }, []);
 
   const handleInputChange = (e) => {
@@ -122,17 +126,33 @@ const PaymentPage = () => {
       localStorage.setItem("orderId", orderId);
       localStorage.setItem("paymentId", paymentId);
 
-      // Initiate Razorpay payment
-      const paymentResult = await initiatePayment(totalAmount, formData);
+      // Initiate Razorpay payment with timeout
+      console.log('Starting payment for amount:', totalAmount);
+      const paymentPromise = initiatePayment(totalAmount, formData);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Payment timeout - please try again')), 60000) // 1 minute timeout
+      );
+      
+      const paymentResult = await Promise.race([paymentPromise, timeoutPromise]);
+      console.log('Payment result:', paymentResult);
 
       if (paymentResult.success) {
         // Payment successful - update Firebase
-        await updateOrderStatus(orderId, "confirmed");
-        await updatePaymentStatus(paymentId, "success", {
-          razorpayPaymentId: paymentResult.paymentId,
-          razorpayOrderId: paymentResult.razorpayOrderId,
-          razorpaySignature: paymentResult.signature,
-        });
+        try {
+          await updateOrderStatus(orderId, "confirmed");
+          console.log('Order status updated to confirmed');
+          
+          await updatePaymentStatus(paymentId, "success", {
+            razorpayPaymentId: paymentResult.paymentId,
+            razorpayOrderId: paymentResult.razorpayOrderId || 'direct_payment',
+            razorpaySignature: paymentResult.signature || '',
+          });
+          console.log('Payment status updated to success');
+        } catch (firebaseError) {
+          console.error('Firebase update error:', firebaseError);
+          // Don't fail the payment if Firebase update fails
+          alert('Payment successful but there was an issue updating the order. Please contact support with your payment ID: ' + paymentResult.paymentId);
+        }
 
         // Track successful payment event
         if (window.dataLayer) {
@@ -152,8 +172,8 @@ const PaymentPage = () => {
         setOrderData(orderData);
         setPaymentData({
           paymentId: paymentResult.paymentId,
-          orderId: paymentResult.orderId,
-          signature: paymentResult.signature,
+          orderId: paymentResult.orderId || 'direct_payment',
+          signature: paymentResult.signature || '',
         });
 
         // Clear cart data
@@ -168,6 +188,10 @@ const PaymentPage = () => {
     } catch (error) {
       console.error("Error processing payment:", error);
 
+      // Check if this is a timeout or callback issue
+      const isTimeout = error.message.includes('timeout');
+      const isCancelled = error.message.includes('cancelled');
+      
       // Update payment status to failed if we have payment ID
       if (paymentId) {
         try {
@@ -196,13 +220,14 @@ const PaymentPage = () => {
       // Set user-friendly error message
       let errorMessage = "Payment failed. Please try again.";
 
-      if (error.message.includes("cancelled")) {
+      if (isCancelled) {
         errorMessage = "Payment was cancelled. Please try again.";
       } else if (error.message.includes("verification")) {
         errorMessage = "Payment verification failed. Please contact support.";
       } else if (error.message.includes("network")) {
-        errorMessage =
-          "Network error. Please check your connection and try again.";
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (isTimeout) {
+        errorMessage = "Payment is taking too long. Please check your payment status and try again.";
       }
 
       setPaymentError(errorMessage);
@@ -220,6 +245,43 @@ const PaymentPage = () => {
     localStorage.removeItem("selectedPackage");
     localStorage.removeItem("templeData");
     localStorage.removeItem("navigatingToPayment");
+    localStorage.removeItem("orderId");
+    localStorage.removeItem("paymentId");
+  };
+
+  const handleRecoveryCheck = async () => {
+    if (!orderId || !paymentId) {
+      alert("No order information found. Please start a new payment.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // Check if payment was successful by checking Firebase
+      const { getOrderById, getPaymentsByOrderId } = await import("../../firebase/orderService");
+      const order = await getOrderById(orderId);
+      const payments = await getPaymentsByOrderId(orderId);
+      
+      if (order && order.status === "confirmed" && payments.length > 0) {
+        const successfulPayment = payments.find(p => p.status === "success");
+        if (successfulPayment) {
+          // Payment was successful, show thank you page
+          setOrderData(order);
+          setPaymentData(successfulPayment);
+          setShowThankYou(true);
+          clearCartData();
+          return;
+        }
+      }
+      
+      alert("Payment status could not be verified. Please contact support or try again.");
+    } catch (error) {
+      console.error("Recovery check failed:", error);
+      alert("Unable to check payment status. Please contact support.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Show thank you page if payment was successful
@@ -310,7 +372,7 @@ const PaymentPage = () => {
                     value={formData.gotra}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    placeholder="Enter your gotra (default: Kashyap)"
+                    placeholder="Enter your gotra (default: Bhardwaj)" 
                   />
                 </div>
 
@@ -413,6 +475,36 @@ const PaymentPage = () => {
                 {razorpayError && (
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                     <strong>Razorpay Error:</strong> {razorpayError}
+                  </div>
+                )}
+
+                {/* Recovery Mode - Show if stuck in loading */}
+                {isSubmitting && orderId && (
+                  <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <strong>Payment Processing:</strong> If this takes too long, you can check your payment status or cancel.
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleRecoveryCheck}
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Check Status
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsSubmitting(false);
+                            setPaymentError('');
+                          }}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 

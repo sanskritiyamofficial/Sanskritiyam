@@ -75,7 +75,7 @@ export const formatOrderData = (formData, selectedPackage, templeData, cartItems
     // Customer information
     customer: {
       name: formData.name || '',
-      gotra: formData.gotra || 'Kashyap',
+      gotra: formData.gotra || '',
       email: formData.email || '',
       phone: formData.phone || '',
       address: {
@@ -143,7 +143,7 @@ export const formatPaymentData = (orderData, orderId, paymentDetails = {}) => {
       transactionId: paymentDetails.transactionId || '',
       paymentId: paymentDetails.paymentId || '',
       signature: paymentDetails.signature || '',
-      gatewayOrderId: paymentDetails.gatewayOrderId || ''
+      gatewayOrderId: paymentDetails.gatewayOrderId || 'direct_payment'
     },
     
     // Customer reference

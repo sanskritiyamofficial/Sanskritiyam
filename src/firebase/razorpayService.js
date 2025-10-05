@@ -139,46 +139,59 @@ export const useRazorpayPayment = () => {
 
       // Return a promise that resolves when payment is completed
       return new Promise((resolve, reject) => {
-        const razorpayInstance = new Razorpay(razorpayOptions);
-        
-        // Handle payment success
-        razorpayInstance.on('payment.success', async (response) => {
-          try {
-            console.log('Payment success response:', response);
-            
-            // Verify payment
-            const verification = await verifyRazorpayPayment(response);
-            
+        // Create options with proper handlers
+        const optionsWithHandlers = {
+          ...razorpayOptions,
+          handler: async (response) => {
+            try {
+              console.log('Payment success response:', response);
+              
+              // Verify payment
+              const verification = await verifyRazorpayPayment(response);
+              
             if (verification.verified) {
+              // Ensure we have valid order IDs
+              const orderId = verification.orderId || response.razorpay_order_id || 'direct_payment';
+              const razorpayOrderId = razorpayOrder.id || response.razorpay_order_id || 'direct_payment';
+              
+              console.log('Payment success - orderId:', orderId, 'razorpayOrderId:', razorpayOrderId);
+              
               resolve({
                 success: true,
                 paymentId: verification.paymentId,
-                orderId: verification.orderId || response.razorpay_order_id,
+                orderId: orderId,
                 signature: verification.signature,
-                razorpayOrderId: razorpayOrder.id || response.razorpay_order_id
+                razorpayOrderId: razorpayOrderId
               });
             } else {
               reject(new Error('Payment verification failed'));
             }
-          } catch (error) {
-            console.error('Payment verification error:', error);
-            reject(error);
+            } catch (error) {
+              console.error('Payment verification error:', error);
+              reject(error);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              console.log('Payment modal dismissed');
+              reject(new Error('Payment cancelled by user'));
+            }
           }
-        });
+        };
 
-        // Handle payment error
-        razorpayInstance.on('payment.error', (error) => {
-          console.error('Payment error:', error);
-          reject(new Error(error.description || 'Payment failed'));
-        });
-
-        // Handle modal dismissal
-        razorpayInstance.on('payment.modal.close', () => {
-          reject(new Error('Payment cancelled by user'));
-        });
-
-        // Open the payment modal
-        razorpayInstance.open();
+        const razorpayInstance = new Razorpay(optionsWithHandlers);
+        
+        console.log('Opening Razorpay modal with options:', optionsWithHandlers);
+        
+        // Add error handling for modal opening
+        try {
+          razorpayInstance.open();
+          console.log('Razorpay modal opened successfully');
+        } catch (openError) {
+          console.error('Error opening Razorpay modal:', openError);
+          reject(new Error('Failed to open payment modal: ' + openError.message));
+          return;
+        }
       });
 
     } catch (error) {

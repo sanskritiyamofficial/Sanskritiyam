@@ -16,7 +16,7 @@ const FAQSection = () => {
     },
     {
       question: "What if I don't know my Gotra?",
-      answer: "If you don't know your Gotra, please enter 'Kashyap' as your Gotra while booking the puja."
+      answer: "If you don't know your Gotra, please enter 'Bhardwaj' as your Gotra while booking the puja."
     },
     {
       question: "How to make a payment?",
