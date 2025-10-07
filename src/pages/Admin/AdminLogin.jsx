@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useGetAuth } from '../../contexts/useGetAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const AdminLogin = () => {
@@ -9,7 +9,7 @@ const AdminLogin = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useGetAuth();
   const navigate = useNavigate();
   const location = useLocation();
 

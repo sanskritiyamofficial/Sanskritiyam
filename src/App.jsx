@@ -1,28 +1,47 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useLocation,
 } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+  import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import Home from "./pages/Home/Home";
-import Pujas from "./pages/Pujas";
-import MaalaJaap from "./pages/MaalaJaap";
-import TemplePage from "./pages/TemplePage";
-import TempleOfferingsPage from "./pages/TemplePage/TempleOfferingsPage";
-import PaymentPage from "./pages/Payment/PaymentPage";
-import AdminLogin from "./pages/Admin/AdminLogin";
-import AdminRegister from "./pages/Admin/AdminRegister";
-import OrderDashboard from "./pages/Admin/OrderDashboard";
-import Chadhawa from "./pages/Chadhawa";
-import TempleDetail from "./pages/Chadhawa/TempleDetail";
-import BlogPage from "./pages/Blog";
-import BlogDetailPage from "./pages/Blog/BlogDetailPage";
 import { useEffect } from "react";
+import UpsellCrosssell from "./components/UpsellCrosssell";
+
+// Lazy load components for better performance
+const Home = lazy(() => import("./pages/Home/Home"));
+const Pujas = lazy(() => import("./pages/Pujas"));
+const MaalaJaap = lazy(() => import("./pages/MaalaJaap"));
+const TemplePage = lazy(() => import("./pages/TemplePage"));
+const TempleOfferingsPage = lazy(() =>
+  import("./pages/TemplePage/TempleOfferingsPage")
+);
+const PaymentPage = lazy(() => import("./pages/Payment/PaymentPage"));
+const AdminLogin = lazy(() => import("./pages/Admin/AdminLogin"));
+const AdminRegister = lazy(() => import("./pages/Admin/AdminRegister"));
+const OrderDashboard = lazy(() => import("./pages/Admin/OrderDashboard"));
+const AdminDashboard = lazy(() => import("./pages/Admin/AdminDashboard"));
+const Chadhawa = lazy(() => import("./pages/Chadhawa"));
+const TempleDetail = lazy(() => import("./pages/Chadhawa/TempleDetail"));
+const BlogPage = lazy(() => import("./pages/Blog"));
+const BlogDetailPage = lazy(() => import("./pages/Blog/BlogDetailPage"));
+const Calendar = lazy(() => import("./pages/Calendar/Calendar"));
+const MyAccount = lazy(() => import("./pages/MyAccount/MyAccount"));
+const LoginPage = lazy(() => import("./pages/Login/LoginPage"));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="min-h-screen bg-amber-50 pt-20 flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
+      <p className="mt-4 text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
 
 // Placeholder components for other routes
 const PrivacyPolicy = () => (
@@ -73,35 +92,66 @@ function AppContent() {
     <div className="min-h-screen bg-[#faf5eb]">
       {showNavbar && <Navbar />}
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/pooja-booking" element={<Pujas />} />
-        <Route path="/mala-jaap" element={<MaalaJaap />} />
-        <Route path="/temple/:templeId" element={<TemplePage />} />
-        <Route
-          path="/temple/:templeId/offerings"
-          element={<TempleOfferingsPage />}
-        />
-        <Route path="/payment" element={<PaymentPage />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/register" element={<AdminRegister />} />
-        <Route
-          path="/admin/orders"
-          element={
-            <ProtectedRoute requireAdmin={true}>
-              <OrderDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/chadhawa" element={<Chadhawa />} />
-        <Route path="/chadhawa/:templeId" element={<TempleDetail />} />
-        <Route path="/blogs" element={<BlogPage />} />
-        <Route path="/blogs/:slug" element={<BlogDetailPage />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-        <Route path="/return-policy" element={<ReturnPolicy />} />
-        <Route path="/shipping-policy" element={<ShippingPolicy />} />
-      </Routes>
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/pooja-booking" element={<Pujas />} />
+          <Route path="/mala-jaap" element={<MaalaJaap />} />
+          <Route path="/temple/:templeId" element={<TemplePage />} />
+          <Route
+            path="/temple/:templeId/offerings"
+            element={<TempleOfferingsPage />}
+          />
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/chadhawa" element={<Chadhawa />} />
+          <Route path="/chadhawa/:templeId" element={<TempleDetail />} />
+          <Route path="/blogs" element={<BlogPage />} />
+          <Route path="/blogs/:slug" element={<BlogDetailPage />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/related-pujas" element={<UpsellCrosssell/>} />
+
+          {/* User Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/my-account"
+            element={
+              <ProtectedRoute>
+                <MyAccount />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <OrderDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Legal Pages */}
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route
+            path="/terms-and-conditions"
+            element={<TermsAndConditions />}
+          />
+          <Route path="/return-policy" element={<ReturnPolicy />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        </Routes>
+      </Suspense>
       <Footer />
     </div>
   );

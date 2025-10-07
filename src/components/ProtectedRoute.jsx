@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useGetAuth } from '../contexts/useGetAuth';  
 
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
-  const { currentUser, isAdmin, loading } = useAuth();
+  const { currentUser, isAdmin, loading } = useGetAuth();
   const location = useLocation();
 
   // Show loading spinner while checking authentication

@@ -9,7 +9,7 @@ import {
   where, 
   orderBy, 
   limit,
-  serverTimestamp 
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from './config';
 import { removeUndefinedValues } from './orderUtils';
@@ -18,6 +18,7 @@ import { removeUndefinedValues } from './orderUtils';
 const ORDERS_COLLECTION = 'orders';
 const PAYMENTS_COLLECTION = 'payments';
 const TEMPLE_OFFERINGS_COLLECTION = 'templeOfferings';
+const USERS_COLLECTION = 'users';
 
 // Order status constants
 export const ORDER_STATUS = {
@@ -37,7 +38,7 @@ export const PAYMENT_STATUS = {
 };
 
 /**
- * Create a new order
+ * Create a new order with dual storage (global + user-specific)
  * @param {Object} orderData - Order data
  * @returns {Promise<string>} - Document ID
  */
@@ -53,8 +54,25 @@ export const createOrder = async (orderData) => {
     // Clean undefined values before sending to Firestore
     const cleanedOrder = removeUndefinedValues(order);
 
+    // Save to global orders collection
     const docRef = await addDoc(collection(db, ORDERS_COLLECTION), cleanedOrder);
     console.log('Order created with ID:', docRef.id);
+
+    // If order has userId, also save to user's orders subcollection
+    if (orderData.userId) {
+      try {
+        const userOrdersRef = collection(db, USERS_COLLECTION, orderData.userId, 'orders');
+        await addDoc(userOrdersRef, {
+          ...cleanedOrder,
+          globalOrderId: docRef.id // Reference to global order
+        });
+        console.log('Order also saved to user collection');
+      } catch (userError) {
+        console.warn('Failed to save to user collection:', userError);
+        // Don't fail the main order creation if user collection fails
+      }
+    }
+
     return docRef.id;
   } catch (error) {
     console.error('Error creating order:', error);
@@ -126,6 +144,41 @@ export const updatePaymentStatus = async (paymentId, status, additionalData = {}
     console.log('Payment status updated:', paymentId, status);
   } catch (error) {
     console.error('Error updating payment status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get user orders from user's subcollection
+ * @param {string} userId - User ID
+ * @returns {Promise<Array>} - Array of user orders
+ */
+export const getUserOrders = async (userId) => {
+  try {
+    const userOrdersRef = collection(db, USERS_COLLECTION, userId, 'orders');
+    const q = query(userOrdersRef);
+    const querySnapshot = await getDocs(q);
+    
+    const orders = [];
+    querySnapshot.forEach((doc) => {
+      const orderData = doc.data();
+      orders.push({
+        id: doc.id,
+        globalOrderId: orderData.globalOrderId,
+        ...orderData
+      });
+    });
+    
+    // Sort by creation date (newest first)
+    orders.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      return dateB - dateA;
+    });
+    
+    return orders;
+  } catch (error) {
+    console.error('Error getting user orders:', error);
     throw error;
   }
 };

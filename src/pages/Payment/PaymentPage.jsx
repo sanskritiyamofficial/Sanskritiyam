@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   createCompleteOrder,
   updateOrderStatus,
@@ -10,13 +11,15 @@ import {
   validateOrderData,
 } from "../../firebase/orderUtils";
 import { useRazorpayPayment } from "../../firebase/razorpayService";
+import { useGetAuth } from "../../contexts/useGetAuth"; 
 import RazorpayDebug from "../../components/RazorpayDebug";
 import ThankYouPage from "../../components/ThankYouPage";
 
 const PaymentPage = () => {
+  const navigate = useNavigate();
+  const { currentUser } = useGetAuth();
   const {
     initiatePayment,
-    isLoading: razorpayLoading,
     error: razorpayError,
   } = useRazorpayPayment();
 
@@ -42,7 +45,7 @@ const PaymentPage = () => {
   const [showThankYou, setShowThankYou] = useState(false);
   const [orderData, setOrderData] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
-
+  const [isValidating, setIsValidating] = useState(true);
   useEffect(() => {
     // Load data from localStorage
     const savedTotal = localStorage.getItem("totalAmount");
@@ -53,6 +56,7 @@ const PaymentPage = () => {
     const savedOrderId = localStorage.getItem("orderId");
     const savedPaymentId = localStorage.getItem("paymentId");
 
+
     if (savedTotal) setTotalAmount(parseInt(savedTotal));
     if (savedEventName) setEventName(savedEventName);
     if (savedCartItems) setCartItems(JSON.parse(savedCartItems));
@@ -60,7 +64,9 @@ const PaymentPage = () => {
     if (savedTempleData) setTempleData(JSON.parse(savedTempleData));
     if (savedOrderId) setOrderId(savedOrderId);
     if (savedPaymentId) setPaymentId(savedPaymentId);
-  }, []);
+    
+    setIsValidating(false);
+  }, [navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -97,6 +103,13 @@ const PaymentPage = () => {
         totalAmount
       );
 
+      // Add user information if user is logged in
+      if (currentUser) {
+        orderData.userId = currentUser.uid;
+        orderData.userEmail = currentUser.email;
+        orderData.userName = currentUser.displayName || formData.name;
+      }
+
       // Validate order data
       const validation = validateOrderData(orderData);
       if (!validation.isValid) {
@@ -127,20 +140,17 @@ const PaymentPage = () => {
       localStorage.setItem("paymentId", paymentId);
 
       // Initiate Razorpay payment with timeout
-      console.log('Starting payment for amount:', totalAmount);
       const paymentPromise = initiatePayment(totalAmount, formData);
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Payment timeout - please try again')), 60000) // 1 minute timeout
       );
       
       const paymentResult = await Promise.race([paymentPromise, timeoutPromise]);
-      console.log('Payment result:', paymentResult);
 
       if (paymentResult.success) {
         // Payment successful - update Firebase
         try {
           await updateOrderStatus(orderId, "confirmed");
-          console.log('Order status updated to confirmed');
           
           await updatePaymentStatus(paymentId, "success", {
             razorpayPaymentId: paymentResult.paymentId,
@@ -283,6 +293,18 @@ const PaymentPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading screen while validating
+  if (isValidating) {
+    return (
+      <div className="min-h-screen bg-amber-50 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Validating booking...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show thank you page if payment was successful
   if (showThankYou) {
@@ -510,9 +532,9 @@ const PaymentPage = () => {
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || razorpayLoading}
+                  disabled={isSubmitting}
                   className={`w-full py-3 px-6 rounded-lg font-semibold text-lg transition duration-200 ${
-                    isSubmitting || razorpayLoading
+                    isSubmitting
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-orange-500 hover:bg-orange-600"
                   } text-white`}
@@ -521,11 +543,6 @@ const PaymentPage = () => {
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                       Processing Payment...
-                    </div>
-                  ) : razorpayLoading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Loading Payment Gateway...
                     </div>
                   ) : (
                     `Pay ₹${totalAmount} & Complete Booking`

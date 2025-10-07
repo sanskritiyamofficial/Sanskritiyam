@@ -191,7 +191,7 @@ const Pujas = () => {
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  Marriage
+                  💒 Marriage
                 </button>
                 <button
                   onClick={() => handlePujaCategoryChange("rudrabhishek")}
@@ -201,7 +201,7 @@ const Pujas = () => {
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  Rudrabhishek
+                  🔥 Rudrabhishek
                 </button>
                 <button
                   onClick={() => handlePujaCategoryChange("healing")}
@@ -211,7 +211,7 @@ const Pujas = () => {
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  Healing
+                  🩺 Healing
                 </button>
                 <button
                   onClick={() => handlePujaCategoryChange("protection")}
@@ -221,7 +221,7 @@ const Pujas = () => {
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  Protection
+                  🛡️ Protection
                 </button>
                 <button
                   onClick={() => handlePujaCategoryChange("prosperity")}
@@ -231,7 +231,27 @@ const Pujas = () => {
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  Prosperity
+                  💰 Prosperity
+                </button>
+                <button
+                  onClick={() => handlePujaCategoryChange("divine-mother")}
+                  className={`px-4 py-2 rounded-full transition-colors ${
+                    selectedPujaCategory === "divine-mother"
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  🕉️ Divine Mother
+                </button>
+                <button
+                  onClick={() => handlePujaCategoryChange("wisdom")}
+                  className={`px-4 py-2 rounded-full transition-colors ${
+                    selectedPujaCategory === "wisdom"
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  🧠 Wisdom
                 </button>
               </div>
 

@@ -26,7 +26,7 @@ const HeroSection = () => {
           <div className="w-full lg:w-1/2 order-2 lg:order-1 text-center lg:text-left">
             {/* Om Section */}
             <div className="mb-6 md:mb-8 flex flex-row items-center justify-center lg:justify-start gap-2 sm:gap-3 md:gap-4">
-              <div href="" className="flex items-center gap-2 sm:gap-3 md:gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
                 <img
                   src="/assets/img/om1.png"
                   alt="Om Symbol"

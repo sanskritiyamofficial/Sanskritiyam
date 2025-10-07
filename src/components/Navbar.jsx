@@ -1,17 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaHome, FaGift } from "react-icons/fa";
+import { useGetAuth } from "../contexts/useGetAuth";  
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-
+  const navigate = useNavigate();
+  const { currentUser, logout, isAdmin } = useGetAuth();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
 
   const isActive = (path) => {
@@ -21,17 +33,17 @@ const Navbar = () => {
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isMenuOpen && !event.target.closest('nav')) {
+      if (isMenuOpen && !event.target.closest("nav")) {
         setIsMenuOpen(false);
       }
     };
 
     if (isMenuOpen) {
-      document.addEventListener('click', handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [isMenuOpen]);
 
@@ -113,11 +125,77 @@ const Navbar = () => {
               >
                 Blogs
               </Link>
-              <Link to="/pooja-booking">
-                <button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition">
-                  Book Pujas
-                </button>
+              <Link
+                to="/calendar"
+                className={`transition ${
+                  isActive("/calendar")
+                    ? "text-orange-500 font-semibold"
+                    : "text-gray-700 hover:text-orange-500"
+                }`}
+              >
+                Calendar
               </Link>
+              {currentUser ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-orange-500 transition bg-orange-100 px-4 py-2 rounded-full"
+                  >
+                    <i className="fas fa-user"></i>
+                    <span>{currentUser.displayName || currentUser.email}</span>
+                    <i
+                      className={`fas fa-chevron-down transition-transform ${
+                        isUserMenuOpen ? "rotate-180" : ""
+                      }`}
+                    ></i>
+                  </button>
+
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <Link
+                        to="/my-account"
+                        className="block px-4 py-2 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <i className="fas fa-user mr-2"></i>
+                        My Account
+                      </Link>
+                      {isAdmin && (
+                        <Link
+                          to="/admin/dashboard"
+                          className="block px-4 py-2 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          <i className="fas fa-cog mr-2"></i>
+                          Admin Panel
+                        </Link>
+                      )}
+                      <hr className="my-1 border-gray-200" />
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition"
+                      >
+                        <i className="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <Link
+                    to="/login"
+                    className="text-gray-700 hover:text-orange-500 transition"
+                  >
+                    Login
+                  </Link>
+                  <Link to="/pooja-booking">
+                    <button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition">
+                      Book Pujas
+                    </button>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -128,9 +206,7 @@ const Navbar = () => {
                 onClick={toggleMenu}
               >
                 <i
-                  className={`${
-                    isMenuOpen ? "fa-times" : "fa-bars"
-                  } text-xl`}
+                  className={`${isMenuOpen ? "fa-times" : "fa-bars"} text-xl`}
                 ></i>
               </button>
             </div>
@@ -199,11 +275,67 @@ const Navbar = () => {
             >
               Blogs
             </Link>
-            <Link to="/pooja-booking" onClick={closeMenu}>
-              <button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition">
-                Book Pujas
-              </button>
+            <Link
+              to="/calendar"
+              className={`transition ${
+                isActive("/calendar")
+                  ? "text-orange-500 font-semibold"
+                  : "text-gray-700 hover:text-orange-500"
+              }`}
+              onClick={closeMenu}
+            >
+              Calendar
             </Link>
+            {currentUser ? (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2 text-gray-700 mb-4">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <i className="fas fa-user text-orange-600"></i>
+                  </div>
+                  <span>{currentUser.displayName || currentUser.email}</span>
+                </div>
+                <Link
+                  to="/my-account"
+                  className="block text-gray-700 hover:text-orange-500 transition"
+                  onClick={closeMenu}
+                >
+                  <i className="fas fa-user mr-2"></i>
+                  My Account
+                </Link>
+                {isAdmin && (
+                  <Link
+                    to="/admin/dashboard"
+                    className="block text-gray-700 hover:text-orange-500 transition"
+                    onClick={closeMenu}
+                  >
+                    <i className="fas fa-cog mr-2"></i>
+                    Admin Panel
+                  </Link>
+                )}
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left text-gray-700 hover:text-orange-500 transition"
+                >
+                  <i className="fas fa-sign-out-alt mr-2"></i>
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Link
+                  to="/login"
+                  className="block text-gray-700 hover:text-orange-500 transition"
+                  onClick={closeMenu}
+                >
+                  Login
+                </Link>
+                <Link to="/pooja-booking" onClick={closeMenu}>
+                  <button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition">
+                    Book Pujas
+                  </button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </nav>

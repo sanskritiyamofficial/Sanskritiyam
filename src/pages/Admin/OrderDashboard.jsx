@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useGetAuth } from "../../contexts/useGetAuth"; 
 import {
   getAllOrders,
   getOrdersByStatus,
@@ -11,7 +11,7 @@ import { formatOrderForDisplay } from "../../firebase/orderUtils";
 import * as XLSX from 'xlsx';
 
 const OrderDashboard = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout } = useGetAuth();
   const [orders, setOrders] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);

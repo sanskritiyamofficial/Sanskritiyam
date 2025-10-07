@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   signInWithEmailAndPassword,
   signOut,
@@ -7,16 +7,9 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { auth } from "../firebase/config";
+import { AuthContext } from "./useGetAuth";
 
-const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -38,6 +31,20 @@ export const AuthProvider = ({ children }) => {
   // Sign out function
   const logout = async () => {
     await signOut(auth);
+  };
+
+  // Update user profile
+  const updateUserProfile = async (userData) => {
+    try {
+      if (currentUser) {
+        await updateProfile(currentUser, userData);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
+    }
   };
 
   // Check if user is admin
@@ -67,6 +74,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
+    updateUserProfile,
     isAdmin: isAdmin(currentUser),
     loading,
   };

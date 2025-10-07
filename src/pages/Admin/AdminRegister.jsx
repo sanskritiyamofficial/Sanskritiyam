@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useGetAuth } from '../../contexts/useGetAuth'; 
 import { useNavigate } from 'react-router-dom';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
@@ -13,7 +13,7 @@ const AdminRegister = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup } = useGetAuth();
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {

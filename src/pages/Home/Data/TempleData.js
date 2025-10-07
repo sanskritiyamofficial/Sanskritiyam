@@ -9,6 +9,11 @@ export const temples = [
     link: "/temple/mangala-gauri",
     description: "Puja for Marriage",
     category: "marriage",
+    pujaCategory: "marriage",
+    price: 2100,
+    originalPrice: 2500,
+    duration: "2 hours",
+    benefits: ["Marriage prospects", "Harmony in relationships", "Divine blessings"]
   },
   {
     id: "santaneshwar-mahadev",
@@ -19,6 +24,11 @@ export const temples = [
     link: "/temple/santaneshwar-mahadev",
     description: "Rudrabhishek Puja",
     category: "rudrabhishek",
+    pujaCategory: "rudrabhishek",
+    price: 3100,
+    originalPrice: 3500,
+    duration: "3 hours",
+    benefits: ["Spiritual purification", "Removal of obstacles", "Divine protection"]
   },
   {
     id: 3,
@@ -30,6 +40,11 @@ export const temples = [
     link: "/temple/mrityunjay-mahadev",
     description: "Mantra Chanting & Rudrabhishek",
     category: "healing",
+    pujaCategory: "healing",
+    price: 4100,
+    originalPrice: 4500,
+    duration: "4 hours",
+    benefits: ["Health & healing", "Longevity", "Protection from diseases"]
   },
   {
     id: 4,
@@ -41,6 +56,11 @@ export const temples = [
     link: "./RinmukteshwarMandir/RinMukhteshawarMandir-Eng.html",
     description: "Debt Relief Puja",
     category: "debt-relief",
+    pujaCategory: "prosperity",
+    price: 2600,
+    originalPrice: 3000,
+    duration: "2.5 hours",
+    benefits: ["Debt relief", "Financial stability", "Prosperity"]
   },
   {
     id: 5,
@@ -52,6 +72,11 @@ export const temples = [
     link: "./MaaKamakhyaMandir/MaakamakhyaMandir-Eng.html",
     description: "Divine Mother's Blessings",
     category: "divine-mother",
+    pujaCategory: "divine-mother",
+    price: 3600,
+    originalPrice: 4000,
+    duration: "3.5 hours",
+    benefits: ["Divine mother's blessings", "Feminine power", "Protection"]
   },
   {
     id: 6,
@@ -63,6 +88,11 @@ export const temples = [
     link: "./ChintaamaniGaneshMandir/ChinamaniGaneshMandir-Eng.html",
     description: "Wisdom & Success Puja",
     category: "wisdom",
+    pujaCategory: "wisdom",
+    price: 2100,
+    originalPrice: 2500,
+    duration: "2 hours",
+    benefits: ["Wisdom & knowledge", "Success in studies", "Removal of obstacles"]
   },
   {
     id: 7,
@@ -73,6 +103,11 @@ export const temples = [
     link: "BatuknathMandir/Batuknath-Eng.html",
     description: "Protection & Strength",
     category: "protection",
+    pujaCategory: "protection",
+    price: 2800,
+    originalPrice: 3200,
+    duration: "2.5 hours",
+    benefits: ["Protection from evil", "Strength & courage", "Fear removal"]
   },
   {
     id: 8,
@@ -83,6 +118,11 @@ export const temples = [
     link: "./GauriKedarMandir/GuariKedarMandir-Eng.html",
     description: "Rudrabhishek Puja",
     category: "rudrabhishek",
+    pujaCategory: "rudrabhishek",
+    price: 3200,
+    originalPrice: 3600,
+    duration: "3 hours",
+    benefits: ["Spiritual purification", "Divine blessings", "Inner peace"]
   },
   {
     id: 9,
@@ -93,6 +133,11 @@ export const temples = [
     link: "./HanumanGarhiMandir/hanuman-garhi-eng.html",
     description: "Protection & Strength Puja",
     category: "protection",
+    pujaCategory: "protection",
+    price: 2500,
+    originalPrice: 2900,
+    duration: "2 hours",
+    benefits: ["Protection & strength", "Courage & bravery", "Success in endeavors"]
   },
   {
     id: 10,
@@ -103,6 +148,11 @@ export const temples = [
     link: "./SatyanarayanKatha/satyanarayan-katha-eng.html",
     description: "Prosperity & Blessings",
     category: "prosperity",
+    pujaCategory: "prosperity",
+    price: 1800,
+    originalPrice: 2200,
+    duration: "1.5 hours",
+    benefits: ["Prosperity & wealth", "Family harmony", "Divine blessings"]
   },
 ];
 
@@ -115,6 +165,11 @@ export const chadhawas = [
     image: "/assets/img/Mandir-img/KashiVishwanath.webp",
     video: "/assets/videos/temple1.mp4",
     link: "https://sanskritiyam.com/chadhawaspageEng/Kashiwishwanath.html",
+    pujaCategory: "divine-mother",
+    price: 5000,
+    originalPrice: 5500,
+    duration: "4 hours",
+    benefits: ["Supreme blessings", "Spiritual awakening", "Divine grace"]
   },
   {
     id: 2,
@@ -124,6 +179,11 @@ export const chadhawas = [
     image: "assets/newimg/batukbhairav.webp",
     video: "/assets/videos/temple2.mp4",
     link: "/chadhawaspageEng/kaalbhairavEng.html",
+    pujaCategory: "protection",
+    price: 3500,
+    originalPrice: 4000,
+    duration: "3 hours",
+    benefits: ["Protection from evil", "Fear removal", "Courage & strength"]
   },
   {
     id: 3,
@@ -133,6 +193,11 @@ export const chadhawas = [
     image: "/assets/img/Mandir-img/SankatMochan.webp",
     video: "/assets/videos/temple3.mp4",
     link: "/chadhawaspageEng/SankatMochanMandirEnd.html",
+    pujaCategory: "protection",
+    price: 2800,
+    originalPrice: 3200,
+    duration: "2.5 hours",
+    benefits: ["Removal of obstacles", "Protection & strength", "Success in endeavors"]
   },
   {
     id: 4,
@@ -142,6 +207,11 @@ export const chadhawas = [
     image: "/assets/img/Mandir-img/Chintamani.webp",
     video: "/assets/videos/temple1.mp4",
     link: "/chadhawaspageEng/ShriChintamani.html",
+    pujaCategory: "wisdom",
+    price: 3200,
+    originalPrice: 3600,
+    duration: "3 hours",
+    benefits: ["Wisdom & knowledge", "Spiritual insight", "Divine guidance"]
   },
   {
     id: 5,
@@ -151,6 +221,11 @@ export const chadhawas = [
     image: "/assets/img/Mandir-img/manglagori.webp",
     video: "/assets/videos/temple2.mp4",
     link: "/chadhawaspageEng/MahaLaxmimandir.html",
+    pujaCategory: "divine-mother",
+    price: 4200,
+    originalPrice: 4700,
+    duration: "3.5 hours",
+    benefits: ["Divine mother's blessings", "Feminine power", "Protection & prosperity"]
   },
   {
     id: 6,
@@ -160,6 +235,11 @@ export const chadhawas = [
     image: "/assets/img/Mandir-img/MahamrityunjayaMandir.webp",
     video: "/assets/videos/temple3.mp4",
     link: "#",
+    pujaCategory: "healing",
+    price: 4500,
+    originalPrice: 5000,
+    duration: "4 hours",
+    benefits: ["Health & healing", "Longevity", "Protection from diseases"]
   },
 ];
 
