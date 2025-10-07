@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   createBlog, 
   updateBlog, 
@@ -8,11 +8,10 @@ import {
   getBlogStats 
 } from '../../firebase/blogService';
 import { useGetAuth } from '../../contexts/useGetAuth';
+import AdminLayout from '../../components/AdminLayout';
 
 const BlogManagement = () => {
   const { currentUser } = useGetAuth();
-  const navigate = useNavigate();
-  
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -218,19 +217,16 @@ const BlogManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-800">Blog Management</h1>
-            <button
-              onClick={handleNewBlog}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold"
-            >
-              + New Blog Post
-            </button>
-          </div>
+    <AdminLayout>
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <button
+                onClick={handleNewBlog}
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold"
+              >
+                + New Blog Post
+              </button>
+            </div>
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -537,9 +533,8 @@ const BlogManagement = () => {
               </table>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+          </div>
+    </AdminLayout>
   );
 };
 

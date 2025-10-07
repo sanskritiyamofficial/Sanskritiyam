@@ -7,10 +7,6 @@ import {
   getDocs, 
   getDoc, 
   query, 
-  where, 
-  orderBy, 
-  limit,
-  startAfter,
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from './config';
@@ -78,40 +74,15 @@ export const getBlogs = async (options = {}) => {
       tag = null,
       limitCount = 10,
       lastDoc = null,
-      orderByField = 'publishedAt',
       orderDirection = 'desc'
     } = options;
 
     let q = query(collection(db, BLOGS_COLLECTION));
 
-    // Filter by status
-    if (status) {
-      q = query(q, where('status', '==', status));
-    }
-
-    // Filter by category
-    if (category) {
-      q = query(q, where('category', '==', category));
-    }
-
-    // Filter by tag
-    if (tag) {
-      q = query(q, where('tags', 'array-contains', tag));
-    }
-
-    // Order by
-    q = query(q, orderBy(orderByField, orderDirection));
-
-    // Limit
-    q = query(q, limit(limitCount));
-
-    // Start after (for pagination)
-    if (lastDoc) {
-      q = query(q, startAfter(lastDoc));
-    }
-
+    // For now, let's use a simple approach that doesn't require composite indexes
+    // We'll filter in memory after fetching to avoid index issues
     const querySnapshot = await getDocs(q);
-    const blogs = [];
+    let blogs = [];
     
     querySnapshot.forEach((doc) => {
       blogs.push({
@@ -120,10 +91,36 @@ export const getBlogs = async (options = {}) => {
       });
     });
 
+    // Filter by status
+    if (status && status !== 'all') {
+      blogs = blogs.filter(blog => blog.status === status);
+    }
+
+    // Filter by category
+    if (category) {
+      blogs = blogs.filter(blog => blog.category === category);
+    }
+
+    // Filter by tag
+    if (tag) {
+      blogs = blogs.filter(blog => blog.tags && blog.tags.includes(tag));
+    }
+
+    // Sort by createdAt
+    blogs.sort((a, b) => {
+      const aTime = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const bTime = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return orderDirection === 'desc' ? bTime - aTime : aTime - bTime;
+    });
+
+    // Apply pagination
+    const startIndex = lastDoc ? blogs.findIndex(blog => blog.id === lastDoc.id) + 1 : 0;
+    const paginatedBlogs = blogs.slice(startIndex, startIndex + limitCount);
+
     return {
-      blogs,
-      lastDoc: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
-      hasMore: querySnapshot.docs.length === limitCount
+      blogs: paginatedBlogs,
+      lastDoc: paginatedBlogs.length > 0 ? paginatedBlogs[paginatedBlogs.length - 1] : null,
+      hasMore: paginatedBlogs.length === limitCount
     };
   } catch (error) {
     console.error('Error getting blogs:', error);
@@ -151,20 +148,21 @@ export const getBlogById = async (blogId) => {
 // Get a single blog by slug
 export const getBlogBySlug = async (slug) => {
   try {
-    const q = query(
-      collection(db, BLOGS_COLLECTION),
-      where('slug', '==', slug),
-      where('status', '==', 'published')
-    );
-    
+    // Get all blogs and filter in memory to avoid index issues
+    const q = query(collection(db, BLOGS_COLLECTION));
     const querySnapshot = await getDocs(q);
     
-    if (querySnapshot.empty) {
-      throw new Error('Blog not found');
+    for (const doc of querySnapshot.docs) {
+      const data = doc.data();
+      
+      // Check if this blog matches the slug and is published
+      if (data.slug === slug && data.status === 'published') {
+        return { id: doc.id, ...data };
+      }
     }
-
-    const doc = querySnapshot.docs[0];
-    return { id: doc.id, ...doc.data() };
+    
+    // If no blog found with the slug and published status
+    throw new Error('Blog not found');
   } catch (error) {
     console.error('Error getting blog by slug:', error);
     throw error;
@@ -174,57 +172,44 @@ export const getBlogBySlug = async (slug) => {
 // Get related blogs
 export const getRelatedBlogs = async (currentBlogId, category, tags, limitCount = 3) => {
   try {
-    let q = query(
-      collection(db, BLOGS_COLLECTION),
-      where('status', '==', 'published'),
-      where('__name__', '!=', currentBlogId)
-    );
-
-    // Try to get blogs from same category first
-    if (category) {
-      q = query(q, where('category', '==', category));
-    }
-
-    q = query(q, orderBy('publishedAt', 'desc'), limit(limitCount));
-
+    // Get all published blogs and filter in memory
+    const q = query(collection(db, BLOGS_COLLECTION));
     const querySnapshot = await getDocs(q);
-    const blogs = [];
+    const allBlogs = [];
     
     querySnapshot.forEach((doc) => {
-      blogs.push({
-        id: doc.id,
-        ...doc.data()
-      });
+      const data = doc.data();
+      if (data.status === 'published' && doc.id !== currentBlogId) {
+        allBlogs.push({
+          id: doc.id,
+          ...data
+        });
+      }
     });
 
-    // If we don't have enough blogs from same category, get more
-    if (blogs.length < limitCount) {
-      const remainingLimit = limitCount - blogs.length;
-      const existingIds = blogs.map(blog => blog.id);
-      
-      let additionalQ = query(
-        collection(db, BLOGS_COLLECTION),
-        where('status', '==', 'published'),
-        orderBy('publishedAt', 'desc'),
-        limit(remainingLimit + existingIds.length)
-      );
+    // Sort by publishedAt or createdAt
+    allBlogs.sort((a, b) => {
+      const aTime = a.publishedAt?.toDate ? a.publishedAt.toDate() : 
+                   a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+      const bTime = b.publishedAt?.toDate ? b.publishedAt.toDate() : 
+                   b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+      return bTime - aTime;
+    });
 
-      const additionalSnapshot = await getDocs(additionalQ);
-      const additionalBlogs = [];
-      
-      additionalSnapshot.forEach((doc) => {
-        if (!existingIds.includes(doc.id)) {
-          additionalBlogs.push({
-            id: doc.id,
-            ...doc.data()
-          });
-        }
-      });
-
-      blogs.push(...additionalBlogs.slice(0, remainingLimit));
+    // Try to get blogs from same category first
+    let relatedBlogs = [];
+    if (category) {
+      relatedBlogs = allBlogs.filter(blog => blog.category === category);
     }
 
-    return blogs;
+    // If we don't have enough from same category, add more from all blogs
+    if (relatedBlogs.length < limitCount) {
+      const existingIds = relatedBlogs.map(blog => blog.id);
+      const additionalBlogs = allBlogs.filter(blog => !existingIds.includes(blog.id));
+      relatedBlogs.push(...additionalBlogs.slice(0, limitCount - relatedBlogs.length));
+    }
+
+    return relatedBlogs.slice(0, limitCount);
   } catch (error) {
     console.error('Error getting related blogs:', error);
     throw error;
@@ -234,13 +219,14 @@ export const getRelatedBlogs = async (currentBlogId, category, tags, limitCount 
 // Get blog categories
 export const getBlogCategories = async () => {
   try {
-    const q = query(collection(db, BLOGS_COLLECTION), where('status', '==', 'published'));
+    // Get all blogs and filter in memory
+    const q = query(collection(db, BLOGS_COLLECTION));
     const querySnapshot = await getDocs(q);
     
     const categories = new Set();
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.category) {
+      if (data.status === 'published' && data.category) {
         categories.add(data.category);
       }
     });
@@ -255,13 +241,14 @@ export const getBlogCategories = async () => {
 // Get blog tags
 export const getBlogTags = async () => {
   try {
-    const q = query(collection(db, BLOGS_COLLECTION), where('status', '==', 'published'));
+    // Get all blogs and filter in memory
+    const q = query(collection(db, BLOGS_COLLECTION));
     const querySnapshot = await getDocs(q);
     
     const tags = new Set();
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      if (data.tags && Array.isArray(data.tags)) {
+      if (data.status === 'published' && data.tags && Array.isArray(data.tags)) {
         data.tags.forEach(tag => tags.add(tag));
       }
     });
@@ -298,32 +285,42 @@ export const searchBlogs = async (searchTerm, options = {}) => {
     
     // Note: Firestore doesn't support full-text search natively
     // This is a basic implementation. For production, consider using Algolia or similar
-    const q = query(
-      collection(db, BLOGS_COLLECTION),
-      where('status', '==', 'published'),
-      orderBy('publishedAt', 'desc'),
-      limit(limitCount)
-    );
-
+    
+    // Get all published blogs first
+    const q = query(collection(db, BLOGS_COLLECTION));
     const querySnapshot = await getDocs(q);
     const blogs = [];
     
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      const searchableText = `${data.title} ${data.excerpt} ${data.content}`.toLowerCase();
       
-      if (searchableText.includes(searchTerm.toLowerCase())) {
-        // Filter by category if specified
-        if (!category || data.category === category) {
-          blogs.push({
-            id: doc.id,
-            ...data
-          });
+      // Only include published blogs
+      if (data.status === 'published') {
+        const searchableText = `${data.title} ${data.excerpt || ''} ${data.content || ''}`.toLowerCase();
+        
+        if (searchableText.includes(searchTerm.toLowerCase())) {
+          // Filter by category if specified
+          if (!category || data.category === category) {
+            blogs.push({
+              id: doc.id,
+              ...data
+            });
+          }
         }
       }
     });
 
-    return blogs;
+    // Sort by publishedAt or createdAt
+    blogs.sort((a, b) => {
+      const aTime = a.publishedAt?.toDate ? a.publishedAt.toDate() : 
+                   a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+      const bTime = b.publishedAt?.toDate ? b.publishedAt.toDate() : 
+                   b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+      return bTime - aTime;
+    });
+
+    // Apply limit
+    return blogs.slice(0, limitCount);
   } catch (error) {
     console.error('Error searching blogs:', error);
     throw error;
@@ -343,28 +340,27 @@ const generateSlug = (title) => {
 // Get blog statistics for admin
 export const getBlogStats = async () => {
   try {
-    const publishedQuery = query(
-      collection(db, BLOGS_COLLECTION),
-      where('status', '==', 'published')
-    );
+    // Get all blogs and filter in memory
+    const q = query(collection(db, BLOGS_COLLECTION));
+    const querySnapshot = await getDocs(q);
     
-    const draftQuery = query(
-      collection(db, BLOGS_COLLECTION),
-      where('status', '==', 'draft')
-    );
-
-    const [publishedSnapshot, draftSnapshot] = await Promise.all([
-      getDocs(publishedQuery),
-      getDocs(draftQuery)
-    ]);
-
-    const totalViews = publishedSnapshot.docs.reduce((total, doc) => {
-      return total + (doc.data().viewCount || 0);
-    }, 0);
+    let totalPublished = 0;
+    let totalDrafts = 0;
+    let totalViews = 0;
+    
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.status === 'published') {
+        totalPublished++;
+        totalViews += data.viewCount || 0;
+      } else if (data.status === 'draft') {
+        totalDrafts++;
+      }
+    });
 
     return {
-      totalPublished: publishedSnapshot.size,
-      totalDrafts: draftSnapshot.size,
+      totalPublished,
+      totalDrafts,
       totalViews
     };
   } catch (error) {

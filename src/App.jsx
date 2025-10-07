@@ -71,10 +71,22 @@ const ShippingPolicy = () => (
 // Helper to determine if Navbar should be shown
 const useShowNavbar = () => {
   const location = useLocation();
-  // Hide Navbar for admin login, register, and orders
-  const hideNavbarRoutes = ["/admin/login", "/admin/register", "/admin/orders"];
-  // Also hide for /admin/orders subroutes (if any in future)
+  // Hide Navbar for all admin pages
+  const hideNavbarRoutes = ["/admin"];
+  // Also hide for /admin subroutes
   if (hideNavbarRoutes.some((path) => location.pathname.startsWith(path))) {
+    return false;
+  }
+  return true;
+};
+
+// Helper to determine if Footer should be shown
+const useShowFooter = () => {
+  const location = useLocation();
+  // Hide Footer for all admin pages
+  const hideFooterRoutes = ["/admin"];
+  // Also hide for /admin subroutes
+  if (hideFooterRoutes.some((path) => location.pathname.startsWith(path))) {
     return false;
   }
   return true;
@@ -91,6 +103,7 @@ const ScrollToTop = () => {
 
 function AppContent() {
   const showNavbar = useShowNavbar();
+  const showFooter = useShowFooter();
   return (
     <div className="min-h-screen bg-[#faf5eb]">
       {showNavbar && <Navbar />}
@@ -131,6 +144,14 @@ function AppContent() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/register" element={<AdminRegister />} />
           <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/dashboard"
             element={
               <ProtectedRoute requireAdmin={true}>
@@ -165,7 +186,7 @@ function AppContent() {
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
         </Routes>
       </Suspense>
-      <Footer />
+      {showFooter && <Footer />}
     </div>
   );
 }

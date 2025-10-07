@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useGetAuth } from '../../contexts/useGetAuth';
 import { getAllOrders, getOrderStatistics } from '../../firebase/orderService';
+import AdminLayout from '../../components/AdminLayout';
 
 const AdminDashboard = () => {
   const { currentUser, isAdmin } = useGetAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab] = useState('overview');
   const [orders, setOrders] = useState([]);
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,123 +57,7 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage Pujas, Chadhavas, and Orders</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Welcome, {currentUser?.email}</span>
-              <Link
-                to="/"
-                className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition"
-              >
-                View Site
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-white shadow-lg min-h-screen">
-          <nav className="p-4">
-            <div className="space-y-2">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                  activeTab === 'overview' 
-                    ? 'bg-orange-100 text-orange-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <i className="fas fa-tachometer-alt mr-2"></i>
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('orders')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                  activeTab === 'orders' 
-                    ? 'bg-orange-100 text-orange-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <i className="fas fa-shopping-bag mr-2"></i>
-                Orders
-              </button>
-              <button
-                onClick={() => setActiveTab('pujas')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                  activeTab === 'pujas' 
-                    ? 'bg-orange-100 text-orange-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <i className="fas fa-om mr-2"></i>
-                Pujas
-              </button>
-              <Link
-                to="/admin/blogs"
-                className="w-full text-left px-4 py-2 rounded-lg transition text-gray-600 hover:bg-gray-100"
-              >
-                <i className="fas fa-blog mr-2"></i>
-                Blog Management
-              </Link>
-              <button
-                onClick={() => setActiveTab('chadhavas')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                  activeTab === 'chadhavas' 
-                    ? 'bg-orange-100 text-orange-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <i className="fas fa-gift mr-2"></i>
-                Chadhavas
-              </button>
-              <button
-                onClick={() => setActiveTab('blogs')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                  activeTab === 'blogs' 
-                    ? 'bg-orange-100 text-orange-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <i className="fas fa-blog mr-2"></i>
-                Blogs
-              </button>
-              <button
-                onClick={() => setActiveTab('users')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                  activeTab === 'users' 
-                    ? 'bg-orange-100 text-orange-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <i className="fas fa-users mr-2"></i>
-                Users
-              </button>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                  activeTab === 'settings' 
-                    ? 'bg-orange-100 text-orange-800' 
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <i className="fas fa-cog mr-2"></i>
-                Settings
-              </button>
-            </div>
-          </nav>
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 p-6">
+    <AdminLayout>
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
@@ -385,9 +270,7 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
-        </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 

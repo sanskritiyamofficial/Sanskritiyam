@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { blogData, getBlogsByCategory, searchBlogs } from '../../data/blogData';
+import { getBlogs, searchBlogs as searchBlogsFirebase } from '../../firebase/blogService';
 import './BlogPage.css';
 
 const BlogPage = () => {
@@ -8,30 +8,48 @@ const BlogPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
   const [filteredBlogs, setFilteredBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  const loadBlogs = useCallback(async () => {
+    try {
+      setLoading(true);
+      let result;
 
-  // Filter blogs based on search term and category
-  useEffect(() => {
-    let filtered;
+      if (searchTerm) {
+        // Search blogs
+        result = await searchBlogsFirebase(searchTerm, {
+          category: activeFilter !== 'all' ? activeFilter : null,
+          limitCount: 50
+        });
+        setFilteredBlogs(result);
+      } else {
+        // Get blogs by category
+        const options = {
+          status: 'published',
+          limitCount: 50
+        };
+        
+        if (activeFilter !== 'all') {
+          options.category = activeFilter;
+        }
 
-    // First filter by category
-    if (activeFilter !== 'all') {
-      filtered = getBlogsByCategory(activeFilter);
-    } else {
-      filtered = blogData;
+        result = await getBlogs(options);
+        setFilteredBlogs(result.blogs);
+      }
+    } catch (error) {
+      console.error('Error loading blogs:', error);
+      setFilteredBlogs([]);
+    } finally {
+      setLoading(false);
     }
-
-    // Then filter by search term
-    if (searchTerm) {
-      filtered = searchBlogs(searchTerm).filter(blog => 
-        activeFilter === 'all' || blog.category === activeFilter
-      );
-    }
-
-    setFilteredBlogs(filtered);
   }, [searchTerm, activeFilter]);
 
-  const handleFilterClick = (category, buttonElement) => {
+  // Load blogs from Firebase
+  useEffect(() => {
+    loadBlogs();
+  }, [loadBlogs]);
+
+  const handleFilterClick = (category) => {
     setActiveFilter(category);
   };
 
@@ -40,13 +58,23 @@ const BlogPage = () => {
   };
 
   const handleBlogClick = (slug) => {
-    navigate(`/blogs/${slug}`);
+    navigate(`/blog/${slug}`);
+  };
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   return (
     <div className="min-h-screen bg-amber-50">
       {/* Search Bar */}
-      <div className="w-full z-40 sticky top-0 bg-white shadow-sm">
+      <div className="w-full z-40 sticky top-20 bg-white shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3">
           <input
             type="text"
@@ -60,7 +88,7 @@ const BlogPage = () => {
       </div>
 
       {/* Filter Buttons */}
-      <div className="filter-buttons max-w-5xl mx-auto px-4 py-4">
+      <div className="filter-buttons max-w-5xl mx-auto px-4 py-4 mt-20">
         <div className="flex flex-wrap gap-2 justify-center">
           <button
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
@@ -117,46 +145,52 @@ const BlogPage = () => {
 
       {/* Blog List */}
       <section id="blogList" className="blog-container max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredBlogs.map((blog) => (
-            <div
-              key={blog.id}
-              className="blog-card bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-              onClick={() => handleBlogClick(blog.slug)}
-            >
-              <div className="relative">
-                <img
-                  src={blog.image}
-                  alt={blog.title}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="absolute top-2 left-2">
-                  <span className="badge bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                    {blog.badge}
-                  </span>
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredBlogs.map((blog) => (
+              <div
+                key={blog.id}
+                className="blog-card bg-white rounded-lg shadow-lg cursor-pointer overflow-hidden hover:shadow-xl hover:scale-105 transition-shadow duration-300 cursor-pointer"
+                onClick={() => handleBlogClick(blog.slug)}
+              >
+                <div className="relative">
+                  <img
+                    src={blog.featuredImage || blog.image || 'https://via.placeholder.com/400x200?text=Blog+Image'}
+                    alt={blog.title}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute top-2 left-2">
+                    <span className="badge bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      {blog.category || 'Blog'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="blog-content p-6">
+                  <h2 className="blog-title text-xl font-bold text-gray-800 mb-3 line-clamp-2">
+                    {blog.title}
+                  </h2>
+                  <p className="blog-desc text-gray-600 mb-4 line-clamp-3">
+                    {blog.excerpt || blog.description || blog.content?.substring(0, 150) + '...'}
+                  </p>
+                  <p className="blog-meta text-sm text-gray-500 mb-4">
+                    Author: {blog.author} | {formatDate(blog.publishedAt || blog.createdAt)} | {blog.viewCount || 0} views
+                  </p>
+                  <div className="read-more text-orange-500 font-medium hover:text-orange-600 transition-colors">
+                    Read Full →
+                  </div>
                 </div>
               </div>
-              
-              <div className="blog-content p-6">
-                <h2 className="blog-title text-xl font-bold text-gray-800 mb-3 line-clamp-2">
-                  {blog.title}
-                </h2>
-                <p className="blog-desc text-gray-600 mb-4 line-clamp-3">
-                  {blog.description}
-                </p>
-                <p className="blog-meta text-sm text-gray-500 mb-4">
-                  Author: {blog.author} | {blog.date} | {blog.readTime}
-                </p>
-                <div className="read-more text-orange-500 font-medium hover:text-orange-600 transition-colors">
-                  Read Full →
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* No Results Message */}
-        {filteredBlogs.length === 0 && (
+        {!loading && filteredBlogs.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📚</div>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">No blogs found</h3>
