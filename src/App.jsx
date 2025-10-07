@@ -27,8 +27,10 @@ const AdminRegister = lazy(() => import("./pages/Admin/AdminRegister"));
 const OrderDashboard = lazy(() => import("./pages/Admin/OrderDashboard"));
 const AdminDashboard = lazy(() => import("./pages/Admin/AdminDashboard"));
 const BlogManagement = lazy(() => import("./pages/Admin/BlogManagement"));
+const DonationManagement = lazy(() => import("./pages/Admin/DonationManagement"));
 const Chadhawa = lazy(() => import("./pages/Chadhawa"));
 const TempleDetail = lazy(() => import("./pages/Chadhawa/TempleDetail"));
+const DonationPage = lazy(() => import("./pages/Chadhawa/DonationPage"));
 const BlogPage = lazy(() => import("./pages/Blog"));
 const BlogListPage = lazy(() => import("./pages/Blog/BlogListPage"));
 const BlogDetailPage = lazy(() => import("./pages/Blog/BlogDetailPage"));
@@ -121,6 +123,7 @@ function AppContent() {
           />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/chadhawa" element={<Chadhawa />} />
+          <Route path="/chadhawa/donation" element={<DonationPage />} />
           <Route path="/chadhawa/:templeId" element={<TempleDetail />} />
           <Route path="/blog" element={<BlogListPage />} />
           <Route path="/blog/:slug" element={<BlogDetailPage />} />
@@ -172,6 +175,14 @@ function AppContent() {
             element={
               <ProtectedRoute requireAdmin={true}>
                 <BlogManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/donations"
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <DonationManagement />
               </ProtectedRoute>
             }
           />

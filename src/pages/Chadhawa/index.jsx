@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import TempleCard from "../../components/TempleCard";
-import { FaHandHoldingHeart } from "react-icons/fa";
+import { FaHandHoldingHeart, FaDonate } from "react-icons/fa";
 import chadhawaTemples from "./ChadhawaData";
 
 const Chadhawa = () => {
@@ -19,10 +19,24 @@ const Chadhawa = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
             Temple Prasad Booking
           </h1>
-          <p className="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto mb-8">
             Book sacred prasad from the most revered temples in Varanasi. 
             Experience divine blessings through our temple prasad service.
           </p>
+          
+          {/* Online Donation Button */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/chadhawa/donation"
+              className="bg-white text-orange-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-orange-50 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl"
+            >
+              <FaDonate />
+              Make Online Donation
+            </Link>
+            <span className="text-orange-200 text-sm">
+              Support temples with Phool, Deep, Vastra, Mithaai
+            </span>
+          </div>
         </div>
       </div>
 

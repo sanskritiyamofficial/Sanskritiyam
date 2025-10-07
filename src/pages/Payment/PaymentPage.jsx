@@ -10,6 +10,12 @@ import {
   formatPaymentData,
   validateOrderData,
 } from "../../firebase/orderUtils";
+import {
+  createDonation,
+  updateDonationStatus,
+  formatDonationData,
+  sendDonationConfirmation,
+} from "../../firebase/donationService";
 import { useRazorpayPayment } from "../../firebase/razorpayService";
 import { useGetAuth } from "../../contexts/useGetAuth"; 
 import RazorpayDebug from "../../components/RazorpayDebug";
@@ -38,6 +44,8 @@ const PaymentPage = () => {
   const [cartItems, setCartItems] = useState({});
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [templeData, setTempleData] = useState(null);
+  const [donationData, setDonationData] = useState(null);
+  const [isDonation, setIsDonation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState("");
   const [orderId, setOrderId] = useState(null);
@@ -53,15 +61,19 @@ const PaymentPage = () => {
     const savedCartItems = localStorage.getItem("cartItems");
     const savedPackage = localStorage.getItem("selectedPackage");
     const savedTempleData = localStorage.getItem("templeData");
+    const savedDonationData = localStorage.getItem("donationData");
     const savedOrderId = localStorage.getItem("orderId");
     const savedPaymentId = localStorage.getItem("paymentId");
-
 
     if (savedTotal) setTotalAmount(parseInt(savedTotal));
     if (savedEventName) setEventName(savedEventName);
     if (savedCartItems) setCartItems(JSON.parse(savedCartItems));
     if (savedPackage) setSelectedPackage(JSON.parse(savedPackage));
     if (savedTempleData) setTempleData(JSON.parse(savedTempleData));
+    if (savedDonationData) {
+      setDonationData(JSON.parse(savedDonationData));
+      setIsDonation(true);
+    }
     if (savedOrderId) setOrderId(savedOrderId);
     if (savedPaymentId) setPaymentId(savedPaymentId);
     
@@ -85,50 +97,100 @@ const PaymentPage = () => {
       return;
     }
 
-    if (!selectedPackage || !templeData) {
-      alert("Missing package or temple information. Please try again.");
-      return;
+    if (isDonation) {
+      if (!donationData) {
+        alert("Missing donation information. Please try again.");
+        return;
+      }
+    } else {
+      if (!selectedPackage || !templeData) {
+        alert("Missing package or temple information. Please try again.");
+        return;
+      }
     }
 
     setIsSubmitting(true);
     setPaymentError("");
 
     try {
-      // Format order data
-      const orderData = formatOrderData(
-        formData,
-        selectedPackage,
-        templeData,
-        cartItems,
-        totalAmount
-      );
+      let orderData, orderId, paymentId;
 
-      // Add user information if user is logged in
-      if (currentUser) {
-        orderData.userId = currentUser.uid;
-        orderData.userEmail = currentUser.email;
-        orderData.userName = currentUser.displayName || formData.name;
-      }
-
-      // Validate order data
-      const validation = validateOrderData(orderData);
-      if (!validation.isValid) {
-        alert(
-          "Please fix the following errors:\n" + validation.errors.join("\n")
+      if (isDonation) {
+        // Handle donation
+        const formattedDonationData = formatDonationData(
+          formData,
+          donationData.type,
+          donationData.temple,
+          donationData.amount
         );
-        setIsSubmitting(false);
-        return;
-      }
 
-      // Create order and payment in Firebase first (with pending status)
-      const { orderId, paymentId } = await createCompleteOrder(
-        orderData,
-        formatPaymentData(orderData, "", {
+        // Add user information if user is logged in
+        if (currentUser) {
+          formattedDonationData.userId = currentUser.uid;
+          formattedDonationData.userEmail = currentUser.email;
+          formattedDonationData.userName = currentUser.displayName || formData.name;
+        }
+
+        // Create donation record
+        orderId = await createDonation(formattedDonationData);
+        
+        // Create payment record for donation
+        const paymentData = {
+          orderId,
+          amount: donationData.amount,
+          currency: "INR",
           method: "online",
           gateway: "razorpay",
           status: "pending",
-        })
-      );
+          donorName: formData.name,
+          donorEmail: formData.email,
+          donorPhone: formData.phone,
+        };
+
+        // Create payment record
+        const { createPayment } = await import("../../firebase/orderService");
+        paymentId = await createPayment(paymentData);
+
+        orderData = formattedDonationData;
+      } else {
+        // Handle regular order
+        orderData = formatOrderData(
+          formData,
+          selectedPackage,
+          templeData,
+          cartItems,
+          totalAmount
+        );
+
+        // Add user information if user is logged in
+        if (currentUser) {
+          orderData.userId = currentUser.uid;
+          orderData.userEmail = currentUser.email;
+          orderData.userName = currentUser.displayName || formData.name;
+        }
+
+        // Validate order data
+        const validation = validateOrderData(orderData);
+        if (!validation.isValid) {
+          alert(
+            "Please fix the following errors:\n" + validation.errors.join("\n")
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Create order and payment in Firebase first (with pending status)
+        const result = await createCompleteOrder(
+          orderData,
+          formatPaymentData(orderData, "", {
+            method: "online",
+            gateway: "razorpay",
+            status: "pending",
+          })
+        );
+        orderId = result.orderId;
+        paymentId = result.paymentId;
+      }
 
       // Store order and payment IDs
       setOrderId(orderId);
@@ -150,7 +212,11 @@ const PaymentPage = () => {
       if (paymentResult.success) {
         // Payment successful - update Firebase
         try {
-          await updateOrderStatus(orderId, "confirmed");
+          if (isDonation) {
+            await updateDonationStatus(orderId, "confirmed");
+          } else {
+            await updateOrderStatus(orderId, "confirmed");
+          }
           
           await updatePaymentStatus(paymentId, "success", {
             razorpayPaymentId: paymentResult.paymentId,
@@ -158,6 +224,23 @@ const PaymentPage = () => {
             razorpaySignature: paymentResult.signature || '',
           });
           console.log('Payment status updated to success');
+
+          // Send confirmation for donations
+          if (isDonation) {
+            await sendDonationConfirmation(orderData, {
+              paymentId: paymentResult.paymentId,
+              orderId: paymentResult.orderId || 'direct_payment',
+              signature: paymentResult.signature || '',
+            });
+          } else {
+            // Send order confirmation for regular orders
+            const { sendOrderConfirmation } = await import("../../firebase/notificationService");
+            await sendOrderConfirmation(orderData, {
+              paymentId: paymentResult.paymentId,
+              orderId: paymentResult.orderId || 'direct_payment',
+              signature: paymentResult.signature || '',
+            });
+          }
         } catch (firebaseError) {
           console.error('Firebase update error:', firebaseError);
           // Don't fail the payment if Firebase update fails
@@ -172,7 +255,7 @@ const PaymentPage = () => {
             action: "purchase",
             price: totalAmount,
             currency: "INR",
-            location: "Temple, Kashi",
+            location: isDonation ? donationData.temple.location : "Temple, Kashi",
             orderId: orderId,
             paymentId: paymentResult.paymentId,
           });
@@ -214,14 +297,22 @@ const PaymentPage = () => {
         }
       }
 
-      // Update order status to cancelled if we have order ID
+      // Update order/donation status to cancelled if we have order ID
       if (orderId) {
         try {
-          await updateOrderStatus(orderId, "cancelled", {
-            cancellationReason: "Payment failed",
-            errorMessage: error.message,
-            errorCode: error.code || "UNKNOWN_ERROR",
-          });
+          if (isDonation) {
+            await updateDonationStatus(orderId, "cancelled", {
+              cancellationReason: "Payment failed",
+              errorMessage: error.message,
+              errorCode: error.code || "UNKNOWN_ERROR",
+            });
+          } else {
+            await updateOrderStatus(orderId, "cancelled", {
+              cancellationReason: "Payment failed",
+              errorMessage: error.message,
+              errorCode: error.code || "UNKNOWN_ERROR",
+            });
+          }
         } catch (updateError) {
           console.error("Error updating order status:", updateError);
         }
@@ -254,6 +345,7 @@ const PaymentPage = () => {
     localStorage.removeItem("eventName");
     localStorage.removeItem("selectedPackage");
     localStorage.removeItem("templeData");
+    localStorage.removeItem("donationData");
     localStorage.removeItem("navigatingToPayment");
     localStorage.removeItem("orderId");
     localStorage.removeItem("paymentId");
@@ -316,42 +408,70 @@ const PaymentPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-orange-800 mb-8 text-center">
-            Complete Your Puja Booking
+            {isDonation ? "Complete Your Donation" : "Complete Your Puja Booking"}
           </h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Order Summary */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                Order Summary
+                {isDonation ? "Donation Summary" : "Order Summary"}
               </h2>
               <div className="space-y-4">
-                <div className="border-b pb-4">
-                  <h3 className="font-semibold text-lg text-orange-600">
-                    {eventName}
-                  </h3>
-                  <p className="text-gray-600">Puja Package</p>
-                </div>
-
-                {Object.keys(cartItems).length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2">
-                      Additional Offerings:
-                    </h4>
-                    <div className="space-y-2">
-                      {Object.entries(cartItems).map(([itemId, item]) => (
-                        <div
-                          key={itemId}
-                          className="flex justify-between text-sm"
-                        >
-                          <span className="text-gray-600">{itemId}</span>
-                          <span className="font-medium">
-                            Qty: {item.quantity}
-                          </span>
-                        </div>
-                      ))}
+                {isDonation ? (
+                  <>
+                    <div className="border-b pb-4">
+                      <h3 className="font-semibold text-lg text-orange-600">
+                        {donationData?.type?.name} Donation
+                      </h3>
+                      <p className="text-gray-600">{donationData?.temple?.name}</p>
+                      <p className="text-sm text-gray-500">{donationData?.temple?.location}</p>
                     </div>
-                  </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Donation Type:</span>
+                        <span className="font-medium">{donationData?.type?.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Temple:</span>
+                        <span className="font-medium">{donationData?.temple?.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Offering Date:</span>
+                        <span className="font-medium">{donationData?.temple?.date}</span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="border-b pb-4">
+                      <h3 className="font-semibold text-lg text-orange-600">
+                        {eventName}
+                      </h3>
+                      <p className="text-gray-600">Puja Package</p>
+                    </div>
+
+                    {Object.keys(cartItems).length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-800 mb-2">
+                          Additional Offerings:
+                        </h4>
+                        <div className="space-y-2">
+                          {Object.entries(cartItems).map(([itemId, item]) => (
+                            <div
+                              key={itemId}
+                              className="flex justify-between text-sm"
+                            >
+                              <span className="text-gray-600">{itemId}</span>
+                              <span className="font-medium">
+                                Qty: {item.quantity}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="border-t pt-4">
@@ -545,7 +665,7 @@ const PaymentPage = () => {
                       Processing Payment...
                     </div>
                   ) : (
-                    `Pay ₹${totalAmount} & Complete Booking`
+                    isDonation ? `Pay ₹${totalAmount} & Complete Donation` : `Pay ₹${totalAmount} & Complete Booking`
                   )}
                 </button>
               </form>

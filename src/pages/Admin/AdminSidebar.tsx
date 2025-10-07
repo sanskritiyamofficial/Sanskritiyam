@@ -101,6 +101,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab: propActiveTab, s
             <i className="fas fa-gift mr-2"></i>
             Chadhavas
           </button>
+          <Link
+            to="/admin/donations"
+            className={getLinkClass('/admin/donations')}
+          >
+            <i className="fas fa-donate mr-2"></i>
+            Donations
+          </Link>
           <button
             onClick={() => handleTabClick('blogs')}
             className={getButtonClass('blogs')}
