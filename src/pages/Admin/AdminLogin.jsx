@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetAuth } from '../../contexts/useGetAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -9,11 +9,18 @@ const AdminLogin = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useGetAuth();
+  const { login, currentUser, isAdmin, loading: authLoading } = useGetAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/admin/orders';
+  const from = location.state?.from?.pathname || '/admin/dashboard';
+
+  // Redirect if admin is already logged in
+  useEffect(() => {
+    if (!authLoading && currentUser && isAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [currentUser, isAdmin, authLoading, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,6 +70,18 @@ const AdminLogin = () => {
       setLoading(false);
     }
   };
+
+  // Show loading while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

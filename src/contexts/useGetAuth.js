@@ -10,3 +10,9 @@ export const useGetAuth = () => {
   }
   return context;
 };
+
+// Export useAuth as alias for useGetAuth for compatibility
+export const useAuth = useGetAuth;
+
+// Export AuthProvider from AuthContext
+export { AuthProvider } from './AuthContext';

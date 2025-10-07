@@ -116,6 +116,13 @@ const AdminDashboard = () => {
                 <i className="fas fa-om mr-2"></i>
                 Pujas
               </button>
+              <Link
+                to="/admin/blogs"
+                className="w-full text-left px-4 py-2 rounded-lg transition text-gray-600 hover:bg-gray-100"
+              >
+                <i className="fas fa-blog mr-2"></i>
+                Blog Management
+              </Link>
               <button
                 onClick={() => setActiveTab('chadhavas')}
                 className={`w-full text-left px-4 py-2 rounded-lg transition ${
