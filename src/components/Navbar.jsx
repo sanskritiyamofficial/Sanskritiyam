@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaHome, FaGift } from "react-icons/fa";
-import { useGetAuth } from "../contexts/useGetAuth";  
+import { FaHome, FaGift, FaLanguage } from "react-icons/fa";
+import { useGetAuth } from "../contexts/useGetAuth";
+import { useLanguage } from "../contexts/LanguageContext";
+import { getTranslations } from "../data/translations";  
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, logout, isAdmin } = useGetAuth();
+  const { language, toggleLanguage, isHindi } = useLanguage();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  
+  // Get translations
+  const t = getTranslations(language);
+  
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
@@ -83,7 +90,7 @@ const Navbar = () => {
                     : "text-gray-700 hover:text-orange-500"
                 }`}
               >
-                Home
+                {t.home}
               </Link>
               <Link
                 to="/pooja-booking"
@@ -93,7 +100,7 @@ const Navbar = () => {
                     : "text-gray-700 hover:text-orange-500"
                 }`}
               >
-                Pujas
+                {t.pujas}
               </Link>
               <Link
                 to="/mala-jaap"
@@ -103,7 +110,7 @@ const Navbar = () => {
                     : "text-gray-700 hover:text-orange-500"
                 }`}
               >
-                Mala Jaap
+                {t.malaJaap}
               </Link>
               <Link
                 to="/chadhawa"
@@ -113,7 +120,7 @@ const Navbar = () => {
                     : "text-gray-700 hover:text-orange-500"
                 }`}
               >
-                Chadhavas
+                {t.chadhavas}
               </Link>
               <Link
                 to="/blogs"
@@ -123,7 +130,7 @@ const Navbar = () => {
                     : "text-gray-700 hover:text-orange-500"
                 }`}
               >
-                Blogs
+                {t.blogs}
               </Link>
               <Link
                 to="/calendar"
@@ -133,8 +140,18 @@ const Navbar = () => {
                     : "text-gray-700 hover:text-orange-500"
                 }`}
               >
-                Calendar
+                {t.calendar}
               </Link>
+              
+              {/* Language Toggle Button */}
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center space-x-1 cursor-pointer px-3 py-1.5 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 transition"
+                title={isHindi ? t.switchToEnglish : t.switchToHindi}
+              >
+                <FaLanguage className="text-sm" />
+                <span className="text-sm font-medium">{isHindi ? "EN" : "हि"}</span>
+              </button>
               {currentUser ? (
                 <div className="relative">
                   <button
@@ -158,7 +175,7 @@ const Navbar = () => {
                         onClick={() => setIsUserMenuOpen(false)}
                       >
                         <i className="fas fa-user mr-2"></i>
-                        My Account
+                        {t.myAccount}
                       </Link>
                       {isAdmin && (
                         <Link
@@ -167,7 +184,7 @@ const Navbar = () => {
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <i className="fas fa-cog mr-2"></i>
-                          Admin Panel
+                          {t.adminPanel}
                         </Link>
                       )}
                       <hr className="my-1 border-gray-200" />
@@ -176,7 +193,7 @@ const Navbar = () => {
                         className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-orange-50 hover:text-orange-500 transition"
                       >
                         <i className="fas fa-sign-out-alt mr-2"></i>
-                        Logout
+                        {t.logout}
                       </button>
                     </div>
                   )}
@@ -187,11 +204,11 @@ const Navbar = () => {
                     to="/login"
                     className="text-gray-700 hover:text-orange-500 transition"
                   >
-                    Login
+                    {t.login}
                   </Link>
                   <Link to="/pooja-booking">
                     <button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition">
-                      Book Pujas
+                      {t.bookPujas}
                     </button>
                   </Link>
                 </div>
@@ -220,6 +237,15 @@ const Navbar = () => {
           } md:hidden absolute top-16 left-0 right-0 bg-white shadow-lg z-40`}
         >
           <div className="flex flex-col space-y-4 p-4">
+            {/* Language Toggle in Mobile Menu */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center justify-center space-x-2 px-4 py-2 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 transition w-full"
+            >
+              <FaLanguage className="text-lg" />
+              <span className="font-medium">{isHindi ? t.switchToEnglish : t.switchToHindi}</span>
+            </button>
+            
             <Link
               to="/"
               className={`transition ${
@@ -229,7 +255,7 @@ const Navbar = () => {
               }`}
               onClick={closeMenu}
             >
-              Home
+              {t.home}
             </Link>
             <Link
               to="/pooja-booking"
@@ -240,7 +266,7 @@ const Navbar = () => {
               }`}
               onClick={closeMenu}
             >
-              Pujas
+              {t.pujas}
             </Link>
             <Link
               to="/mala-jaap"
@@ -251,7 +277,7 @@ const Navbar = () => {
               }`}
               onClick={closeMenu}
             >
-              Mala Jaap
+              {t.malaJaap}
             </Link>
             <Link
               to="/chadhawa"
@@ -262,7 +288,7 @@ const Navbar = () => {
               }`}
               onClick={closeMenu}
             >
-              Chadhavas
+              {t.chadhavas}
             </Link>
             <Link
               to="/blogs"
@@ -273,7 +299,7 @@ const Navbar = () => {
               }`}
               onClick={closeMenu}
             >
-              Blogs
+              {t.blogs}
             </Link>
             <Link
               to="/calendar"
@@ -284,7 +310,7 @@ const Navbar = () => {
               }`}
               onClick={closeMenu}
             >
-              Calendar
+              {t.calendar}
             </Link>
             {currentUser ? (
               <div className="space-y-2">
@@ -300,7 +326,7 @@ const Navbar = () => {
                   onClick={closeMenu}
                 >
                   <i className="fas fa-user mr-2"></i>
-                  My Account
+                  {t.myAccount}
                 </Link>
                 {isAdmin && (
                   <Link
@@ -309,7 +335,7 @@ const Navbar = () => {
                     onClick={closeMenu}
                   >
                     <i className="fas fa-cog mr-2"></i>
-                    Admin Panel
+                    {t.adminPanel}
                   </Link>
                 )}
                 <button
@@ -317,7 +343,7 @@ const Navbar = () => {
                   className="block w-full text-left text-gray-700 hover:text-orange-500 transition"
                 >
                   <i className="fas fa-sign-out-alt mr-2"></i>
-                  Logout
+                  {t.logout}
                 </button>
               </div>
             ) : (
@@ -327,11 +353,11 @@ const Navbar = () => {
                   className="block text-gray-700 hover:text-orange-500 transition"
                   onClick={closeMenu}
                 >
-                  Login
+                  {t.login}
                 </Link>
                 <Link to="/pooja-booking" onClick={closeMenu}>
                   <button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-2.5 rounded-full hover:shadow-lg transition">
-                    Book Pujas
+                    {t.bookPujas}
                   </button>
                 </Link>
               </div>
@@ -353,7 +379,7 @@ const Navbar = () => {
               }`}
             >
               <FaHome className="text-md" />
-              <span className="text-[10px] mt-0.5">Home</span>
+              <span className="text-[10px] mt-0.5">{t.home}</span>
             </Link>
             <Link
               to="/pooja-booking"
@@ -368,7 +394,7 @@ const Navbar = () => {
                 className="w-6 h-6 text-cyan-500"
                 alt="Om"
               />
-              <span className="text-[10px] mt-0.5">Pujas</span>
+              <span className="text-[10px] mt-0.5">{t.pujas}</span>
             </Link>
             <Link
               to="/chadhawa"
@@ -379,7 +405,7 @@ const Navbar = () => {
               }`}
             >
               <FaGift />
-              <span className="text-[10px] mt-0.5">Chadhavas</span>
+              <span className="text-[10px] mt-0.5">{t.chadhavas}</span>
             </Link>
             <Link
               to="/mala-jaap"
@@ -394,7 +420,7 @@ const Navbar = () => {
                 className="w-8 h-8 text-cyan-500 animate-spin duration-[5s] drop-shadow-md"
                 alt="Rudraksh"
               />
-              <span className="text-[10px] mt-0.5">Mala Jaap</span>
+              <span className="text-[10px] mt-0.5">{t.malaJaap}</span>
             </Link>
           </div>
         </div>

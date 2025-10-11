@@ -41,41 +41,55 @@ export const PAYMENT_STATUS = {
  * @returns {Promise<string>} - Document ID
  */
 export const createDonation = async (donationData) => {
-  try {
-    const donation = {
-      ...donationData,
-      status: DONATION_STATUS.PENDING,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
+  const maxRetries = 3;
+  let lastError;
 
-    // Clean undefined values before sending to Firestore
-    const cleanedDonation = removeUndefinedValues(donation);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const donation = {
+        ...donationData,
+        status: DONATION_STATUS.PENDING,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
 
-    // Save to global donations collection
-    const docRef = await addDoc(collection(db, DONATIONS_COLLECTION), cleanedDonation);
-    console.log('Donation created with ID:', docRef.id);
+      // Clean undefined values before sending to Firestore
+      const cleanedDonation = removeUndefinedValues(donation);
 
-    // If donation has userId, also save to user's donations subcollection
-    if (donationData.userId) {
-      try {
-        const userDonationsRef = collection(db, USERS_COLLECTION, donationData.userId, 'donations');
-        await addDoc(userDonationsRef, {
-          ...cleanedDonation,
-          globalDonationId: docRef.id // Reference to global donation
-        });
-        console.log('Donation also saved to user collection');
-      } catch (userError) {
-        console.warn('Failed to save to user collection:', userError);
-        // Don't fail the main donation creation if user collection fails
+      // Save to global donations collection
+      const docRef = await addDoc(collection(db, DONATIONS_COLLECTION), cleanedDonation);
+      console.log('Donation created with ID:', docRef.id);
+
+      // If donation has userId, also save to user's donations subcollection
+      if (donationData.userId) {
+        try {
+          const userDonationsRef = collection(db, USERS_COLLECTION, donationData.userId, 'donations');
+          await addDoc(userDonationsRef, {
+            ...cleanedDonation,
+            globalDonationId: docRef.id // Reference to global donation
+          });
+          console.log('Donation also saved to user collection');
+        } catch (userError) {
+          console.warn('Failed to save to user collection:', userError);
+          // Don't fail the main donation creation if user collection fails
+        }
+      }
+
+      return docRef.id;
+    } catch (error) {
+      lastError = error;
+      console.error(`Error creating donation (attempt ${attempt}/${maxRetries}):`, error);
+      
+      if (attempt < maxRetries) {
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }
-
-    return docRef.id;
-  } catch (error) {
-    console.error('Error creating donation:', error);
-    throw error;
   }
+
+  // If all retries failed, throw the last error
+  console.error('Failed to create donation after all retries:', lastError);
+  throw new Error(`Failed to create donation after ${maxRetries} attempts: ${lastError.message}`);
 };
 
 /**

@@ -11,15 +11,25 @@ import {
   TestimonialsSection
 } from './components';
 import { getTemplePageData } from './Data/templePageData';
+import { getTempleDataByLanguage } from '../../data/templeDataBilingual';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const TemplePage = () => {
   const { templeId } = useParams();
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [templeData, setTempleData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const data = getTemplePageData(templeId);
+    // Try to get bilingual data first, fall back to old data if not available
+    let data = getTempleDataByLanguage(templeId, language);
+    
+    // If bilingual data doesn't exist, fallback to original data structure
+    if (!data) {
+      data = getTemplePageData(templeId);
+    }
+    
     if (data) {
       setTempleData(data);
       setLoading(false);
@@ -27,7 +37,7 @@ const TemplePage = () => {
       // Redirect to 404 or home page if temple not found
       navigate('/');
     }
-  }, [templeId, navigate]);
+  }, [templeId, language, navigate]);
 
   const handleSelectPackage = () => {
     // Scroll to packages section

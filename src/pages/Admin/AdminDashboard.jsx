@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGetAuth } from '../../contexts/useGetAuth';
 import { getAllOrders, getOrderStatistics } from '../../firebase/orderService';
 import AdminLayout from '../../components/AdminLayout';
+import { FaRupeeSign } from "react-icons/fa";
 
 const AdminDashboard = () => {
   const { currentUser, isAdmin } = useGetAuth();
@@ -60,56 +61,56 @@ const AdminDashboard = () => {
     <AdminLayout>
           {/* Overview Tab */}
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+            <div className="space-y-4 lg:space-y-6">
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Dashboard Overview</h2>
               
               {/* Statistics Cards */}
               {statistics && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white p-6 rounded-lg shadow">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                  <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
                     <div className="flex items-center">
                       <div className="p-2 bg-blue-100 rounded-lg">
-                        <i className="fas fa-shopping-bag text-blue-600"></i>
+                        <i className="fas fa-shopping-bag text-blue-600 text-lg lg:text-xl"></i>
                       </div>
-                      <div className="ml-4">
-                        <p className="text-sm text-gray-600">Total Orders</p>
-                        <p className="text-2xl font-bold text-gray-900">{statistics.total}</p>
+                      <div className="ml-3 lg:ml-4">
+                        <p className="text-xs lg:text-sm text-gray-600">Total Orders</p>
+                        <p className="text-lg lg:text-2xl font-bold text-gray-900">{statistics.total}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow">
+                  <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
                     <div className="flex items-center">
                       <div className="p-2 bg-green-100 rounded-lg">
-                        <i className="fas fa-check-circle text-green-600"></i>
+                        <i className="fas fa-check-circle text-green-600 text-lg lg:text-xl"></i>
                       </div>
-                      <div className="ml-4">
-                        <p className="text-sm text-gray-600">Completed</p>
-                        <p className="text-2xl font-bold text-gray-900">{statistics.completed}</p>
+                      <div className="ml-3 lg:ml-4">
+                        <p className="text-xs lg:text-sm text-gray-600">Completed</p>
+                        <p className="text-lg lg:text-2xl font-bold text-gray-900">{statistics.completed}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow">
+                  <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
                     <div className="flex items-center">
                       <div className="p-2 bg-yellow-100 rounded-lg">
-                        <i className="fas fa-clock text-yellow-600"></i>
+                        <i className="fas fa-clock text-yellow-600 text-lg lg:text-xl"></i>
                       </div>
-                      <div className="ml-4">
-                        <p className="text-sm text-gray-600">Pending</p>
-                        <p className="text-2xl font-bold text-gray-900">{statistics.pending}</p>
+                      <div className="ml-3 lg:ml-4">
+                        <p className="text-xs lg:text-sm text-gray-600">Pending</p>
+                        <p className="text-lg lg:text-2xl font-bold text-gray-900">{statistics.pending}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="bg-white p-6 rounded-lg shadow">
+                  <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
                     <div className="flex items-center">
                       <div className="p-2 bg-orange-100 rounded-lg">
-                        <i className="fas fa-rupee-sign text-orange-600"></i>
+                        <FaRupeeSign className="text-orange-600 text-lg lg:text-xl" />
                       </div>
-                      <div className="ml-4">
-                        <p className="text-sm text-gray-600">Total Revenue</p>
-                        <p className="text-2xl font-bold text-gray-900">₹{statistics.totalRevenue?.toLocaleString()}</p>
+                      <div className="ml-3 lg:ml-4">
+                        <p className="text-xs lg:text-sm text-gray-600">Total Revenue</p>
+                        <p className="text-lg lg:text-2xl font-bold text-gray-900">₹{statistics.totalRevenue?.toLocaleString()}</p>
                       </div>
                     </div>
                   </div>

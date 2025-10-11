@@ -112,7 +112,11 @@ export const formatOrderData = (formData, selectedPackage, templeData, cartItems
     
     // Additional information
     notes: formData.notes || '',
-    specialInstructions: formData.specialInstructions || ''
+    specialInstructions: formData.specialInstructions || '',
+    
+    // Family member information
+    familyMembers: formData.familyMembers || [],
+    additionalNames: formData.additionalNames || ''
   };
 
   // Clean undefined values before returning

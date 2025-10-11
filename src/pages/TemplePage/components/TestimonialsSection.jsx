@@ -1,11 +1,20 @@
 import React from 'react';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 const TestimonialsSection = () => {
+  const { language } = useLanguage();
+
   const testimonials = [
     {
       id: 1,
-      title: "Mahamrityunjaya Yantra",
-      description: "My father's health was deteriorating until we placed the Sanskritiyam Mahamrityunjaya Yantra near his bed, which helped stabilize his condition.",
+      title: {
+        en: "Mahamrityunjaya Yantra",
+        hi: "महामृत्युंजय यंत्र"
+      },
+      description: {
+        en: "My father's health was deteriorating until we placed the Sanskritiyam Mahamrityunjaya Yantra near his bed, which helped stabilize his condition.",
+        hi: "मेरे पिता की तबीयत बिगड़ती जा रही थी जब तक हमने संस्कृतियम महामृत्युंजय यंत्र को उनके बिस्तर के पास नहीं रखा, जिससे उनकी स्थिति स्थिर हो गई।"
+      },
       author: "Nisha Kothari",
       platform: "WhatsApp",
       rating: "⭐⭐⭐⭐⭐",
@@ -13,8 +22,14 @@ const TestimonialsSection = () => {
     },
     {
       id: 2,
-      title: "Prasad Delivery",
-      description: "The prasad delivery service is amazing. I received the sacred prasad from Kashi Vishwanath temple within 3 days. Very satisfied with the service.",
+      title: {
+        en: "Prasad Delivery",
+        hi: "प्रसाद डिलीवरी"
+      },
+      description: {
+        en: "The prasad delivery service is amazing. I received the sacred prasad from Kashi Vishwanath temple within 3 days. Very satisfied with the service.",
+        hi: "प्रसाद डिलीवरी सेवा अद्भुत है। मुझे काशी विश्वनाथ मंदिर से पवित्र प्रसाद 3 दिनों में मिल गया। सेवा से बहुत संतुष्ट हूं।"
+      },
       author: "Rajesh Kumar",
       platform: "Google",
       rating: "⭐⭐⭐⭐⭐",
@@ -22,8 +37,14 @@ const TestimonialsSection = () => {
     },
     {
       id: 3,
-      title: "Online Puja",
-      description: "Being away from India, the online puja service helped me stay connected with our traditions. The live streaming was crystal clear.",
+      title: {
+        en: "Online Puja",
+        hi: "ऑनलाइन पूजा"
+      },
+      description: {
+        en: "Being away from India, the online puja service helped me stay connected with our traditions. The live streaming was crystal clear.",
+        hi: "भारत से दूर होने के कारण, ऑनलाइन पूजा सेवा ने मुझे हमारी परंपराओं से जुड़े रहने में मदद की। लाइव स्ट्रीमिंग बिल्कुल साफ थी।"
+      },
       author: "Priya Sharma",
       platform: "Facebook",
       rating: "⭐⭐⭐⭐⭐",
@@ -41,7 +62,7 @@ const TestimonialsSection = () => {
             className="h-6 sm:h-8 md:h-12"
           />
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-orange-600">
-            Happy Devotees Corner
+            {language === "hi" ? "खुश भक्तों का कोना" : "Happy Devotees Corner"}
           </h2>
           <img
             src="/assets/img/lotus.png"
@@ -60,10 +81,10 @@ const TestimonialsSection = () => {
               >
                 <div className="mb-4 sm:mb-6">
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">
-                    {testimonial.title}
+                    {testimonial.title[language]}
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600">
-                    {testimonial.description}
+                    {testimonial.description[language]}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4">
@@ -80,7 +101,7 @@ const TestimonialsSection = () => {
                       {testimonial.author}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      Via @ {testimonial.platform}
+                      {language === "hi" ? "द्वारा @" : "Via @"} {testimonial.platform}
                     </p>
                   </div>
                 </div>
@@ -95,10 +116,10 @@ const TestimonialsSection = () => {
               >
                 <div className="mb-4 sm:mb-6">
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-2 sm:mb-3">
-                    {testimonial.title}
+                    {testimonial.title[language]}
                   </h3>
                   <p className="text-sm sm:text-base text-gray-600">
-                    {testimonial.description}
+                    {testimonial.description[language]}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 sm:gap-4">
@@ -115,7 +136,7 @@ const TestimonialsSection = () => {
                       {testimonial.author}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      Via @ {testimonial.platform}
+                      {language === "hi" ? "द्वारा @" : "Via @"} {testimonial.platform}
                     </p>
                   </div>
                 </div>

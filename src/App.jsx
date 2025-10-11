@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -34,7 +35,9 @@ const DonationPage = lazy(() => import("./pages/Chadhawa/DonationPage"));
 const BlogPage = lazy(() => import("./pages/Blog"));
 const BlogListPage = lazy(() => import("./pages/Blog/BlogListPage"));
 const BlogDetailPage = lazy(() => import("./pages/Blog/BlogDetailPage"));
-const Calendar = lazy(() => import("./pages/Calendar/Calendar"));
+const CalendarPage = lazy(() => import("./pages/Calendar/CalendarPage"));
+const CalendarView = lazy(() => import("./components/Calendar/FestivalCalendar"));
+const FestivalDetail = lazy(() => import("./pages/Calendar/FestivalDetailPage"));
 const MyAccount = lazy(() => import("./pages/MyAccount/MyAccount"));
 const LoginPage = lazy(() => import("./pages/Login/LoginPage"));
 
@@ -129,7 +132,9 @@ function AppContent() {
           <Route path="/blog/:slug" element={<BlogDetailPage />} />
           <Route path="/blogs" element={<BlogPage />} />
           <Route path="/blogs/:slug" element={<BlogDetailPage />} />
-          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/calendar/view" element={<CalendarView />} />
+          <Route path="/calendar/festival/:festivalId" element={<FestivalDetail />} />
           <Route path="/related-pujas" element={<UpsellCrosssell/>} />
 
           {/* User Routes */}
@@ -205,11 +210,13 @@ function AppContent() {
 export default function App() {
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <Router>
-          <AppContent />
-        </Router>
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </AuthProvider>
+      </LanguageProvider>
     </HelmetProvider>
   );
 }

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   getAllDonations,
   getDonationStatistics,
   updateDonationStatus,
   DONATION_STATUS,
 } from "../../firebase/donationService";
-import { FaEye, FaEdit, FaTrash, FaFilter, FaDownload } from "react-icons/fa";
+import { syncLocalDonations, getLocalDonationsCount } from "../../firebase/syncService";
+import NotificationTest from "../../components/NotificationTest";
+import { FaEye, FaEdit, FaTrash, FaFilter, FaDownload, FaSync, FaBell } from "react-icons/fa";
 
 const DonationManagement = () => {
   const [donations, setDonations] = useState([]);
@@ -16,15 +18,24 @@ const DonationManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [localDonationsCount, setLocalDonationsCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [showNotificationTest, setShowNotificationTest] = useState(false);
 
   useEffect(() => {
     loadDonations();
     loadStatistics();
+    checkLocalDonations();
   }, []);
+
+  const checkLocalDonations = () => {
+    const count = getLocalDonationsCount();
+    setLocalDonationsCount(count);
+  };
 
   useEffect(() => {
     filterDonations();
-  }, [donations, filterStatus, searchTerm]);
+  }, [filterDonations]);
 
   const loadDonations = async () => {
     try {
@@ -48,7 +59,7 @@ const DonationManagement = () => {
     }
   };
 
-  const filterDonations = () => {
+  const filterDonations = useCallback(() => {
     let filtered = donations;
 
     // Filter by status
@@ -68,7 +79,7 @@ const DonationManagement = () => {
     }
 
     setFilteredDonations(filtered);
-  };
+  }, [donations, filterStatus, searchTerm]);
 
   const handleStatusUpdate = async (donationId, newStatus) => {
     try {
@@ -78,6 +89,28 @@ const DonationManagement = () => {
     } catch (error) {
       console.error("Error updating donation status:", error);
       alert("Error updating donation status");
+    }
+  };
+
+  const handleSyncLocalDonations = async () => {
+    try {
+      setSyncing(true);
+      const result = await syncLocalDonations();
+      
+      if (result.synced > 0) {
+        alert(`Successfully synced ${result.synced} local donations to Firebase`);
+        await loadDonations();
+        checkLocalDonations();
+      } else if (result.failed > 0) {
+        alert(`Failed to sync ${result.failed} donations. Please check Firebase permissions.`);
+      } else {
+        alert("No local donations to sync");
+      }
+    } catch (error) {
+      console.error("Error syncing local donations:", error);
+      alert("Error syncing local donations");
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -144,92 +177,92 @@ const DonationManagement = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
           Donation Management
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-600 text-sm lg:text-base">
           Manage and track all temple donations
         </p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <FaEye className="text-blue-600 text-xl" />
+              <FaEye className="text-blue-600 text-lg lg:text-xl" />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Donations</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics.total || 0}</p>
+            <div className="ml-3 lg:ml-4">
+              <p className="text-xs lg:text-sm font-medium text-gray-600">Total Donations</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{statistics.total || 0}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-green-600 text-xl font-bold">₹</span>
+              <span className="text-green-600 text-lg lg:text-xl font-bold">₹</span>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Amount</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="ml-3 lg:ml-4">
+              <p className="text-xs lg:text-sm font-medium text-gray-600">Total Amount</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">
                 ₹{statistics.totalAmount?.toLocaleString() || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-yellow-100 rounded-lg">
-              <span className="text-yellow-600 text-xl font-bold">⏳</span>
+              <span className="text-yellow-600 text-lg lg:text-xl font-bold">⏳</span>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics.pending || 0}</p>
+            <div className="ml-3 lg:ml-4">
+              <p className="text-xs lg:text-sm font-medium text-gray-600">Pending</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{statistics.pending || 0}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <span className="text-green-600 text-xl font-bold">✓</span>
+              <span className="text-green-600 text-lg lg:text-xl font-bold">✓</span>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics.completed || 0}</p>
+            <div className="ml-3 lg:ml-4">
+              <p className="text-xs lg:text-sm font-medium text-gray-600">Completed</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{statistics.completed || 0}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4 lg:p-6">
           <div className="flex items-center">
             <div className="p-2 bg-red-100 rounded-lg">
-              <span className="text-red-600 text-xl font-bold">✗</span>
+              <span className="text-red-600 text-lg lg:text-xl font-bold">✗</span>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Cancelled</p>
-              <p className="text-2xl font-bold text-gray-900">{statistics.cancelled || 0}</p>
+            <div className="ml-3 lg:ml-4">
+              <p className="text-xs lg:text-sm font-medium text-gray-600">Cancelled</p>
+              <p className="text-lg lg:text-2xl font-bold text-gray-900">{statistics.cancelled || 0}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative">
+      <div className="bg-white rounded-lg shadow p-4 lg:p-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Search donations..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <FaFilter className="absolute left-3 top-3 text-gray-400" />
             </div>
@@ -237,7 +270,7 @@ const DonationManagement = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -248,15 +281,52 @@ const DonationManagement = () => {
             </select>
           </div>
 
-          <button
-            onClick={exportDonations}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-          >
-            <FaDownload />
-            Export CSV
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            {localDonationsCount > 0 && (
+              <button
+                onClick={handleSyncLocalDonations}
+                disabled={syncing}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex-1 sm:flex-none"
+              >
+                <FaSync className={syncing ? "animate-spin" : ""} />
+                <span className="hidden sm:inline">
+                  {syncing ? "Syncing..." : `Sync Local (${localDonationsCount})`}
+                </span>
+                <span className="sm:hidden">
+                  {syncing ? "Syncing..." : `Sync (${localDonationsCount})`}
+                </span>
+              </button>
+            )}
+            <button
+              onClick={() => setShowNotificationTest(!showNotificationTest)}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex-1 sm:flex-none"
+            >
+              <FaBell />
+              <span className="hidden sm:inline">
+                {showNotificationTest ? 'Hide Test' : 'Test Notifications'}
+              </span>
+              <span className="sm:hidden">
+                {showNotificationTest ? 'Hide' : 'Test'}
+              </span>
+            </button>
+            <button
+              onClick={exportDonations}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex-1 sm:flex-none"
+            >
+              <FaDownload />
+              <span className="hidden sm:inline">Export CSV</span>
+              <span className="sm:hidden">Export</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Notification Test */}
+      {showNotificationTest && (
+        <div className="mb-8">
+          <NotificationTest />
+        </div>
+      )}
 
       {/* Donations Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -264,25 +334,25 @@ const DonationManagement = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Donor
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                   Temple
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                   Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-3 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -290,7 +360,7 @@ const DonationManagement = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredDonations.map((donation) => (
                 <tr key={donation.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
                         {donation.donorName || "N/A"}
@@ -298,14 +368,20 @@ const DonationManagement = () => {
                       <div className="text-sm text-gray-500">
                         {donation.donorEmail || "N/A"}
                       </div>
+                      {/* Show type and temple on mobile */}
+                      <div className="sm:hidden mt-1">
+                        <div className="text-xs text-gray-500">
+                          {donation.typeName} - {donation.templeName}
+                        </div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 lg:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
                     <div className="text-sm text-gray-900">
                       {donation.typeName || "N/A"}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 lg:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                     <div className="text-sm text-gray-900">
                       {donation.templeName || "N/A"}
                     </div>
@@ -313,32 +389,32 @@ const DonationManagement = () => {
                       {donation.templeLocation || "N/A"}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       ₹{donation.amount?.toLocaleString() || 0}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 lg:px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(donation.status)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
                     {formatDate(donation.createdAt)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                  <td className="px-3 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                       <button
                         onClick={() => {
                           setSelectedDonation(donation);
                           setShowModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm"
                       >
                         <FaEye />
                       </button>
                       <select
                         value={donation.status}
                         onChange={(e) => handleStatusUpdate(donation.id, e.target.value)}
-                        className="text-sm border border-gray-300 rounded px-2 py-1"
+                        className="text-xs sm:text-sm border border-gray-300 rounded px-2 py-1"
                       >
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>

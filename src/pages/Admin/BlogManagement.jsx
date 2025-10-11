@@ -218,52 +218,52 @@ const BlogManagement = () => {
 
   return (
     <AdminLayout>
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-6">
+          <div className="mb-6 lg:mb-8">
+            <div className="flex justify-between items-center mb-4 lg:mb-6">
               <button
                 onClick={handleNewBlog}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg font-semibold text-sm lg:text-base"
               >
                 + New Blog Post
               </button>
             </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-700">Published</h3>
-              <p className="text-3xl font-bold text-green-600">{stats.totalPublished}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
+            <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+              <h3 className="text-sm lg:text-lg font-semibold text-gray-700">Published</h3>
+              <p className="text-2xl lg:text-3xl font-bold text-green-600">{stats.totalPublished}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-700">Drafts</h3>
-              <p className="text-3xl font-bold text-yellow-600">{stats.totalDrafts}</p>
+            <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+              <h3 className="text-sm lg:text-lg font-semibold text-gray-700">Drafts</h3>
+              <p className="text-2xl lg:text-3xl font-bold text-yellow-600">{stats.totalDrafts}</p>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-700">Total Views</h3>
-              <p className="text-3xl font-bold text-blue-600">{stats.totalViews.toLocaleString()}</p>
+            <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
+              <h3 className="text-sm lg:text-lg font-semibold text-gray-700">Total Views</h3>
+              <p className="text-2xl lg:text-3xl font-bold text-blue-600">{stats.totalViews.toLocaleString()}</p>
             </div>
           </div>
         </div>
 
         {/* Blog Form Modal */}
         {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+              <div className="p-4 lg:p-6">
+                <div className="flex justify-between items-center mb-4 lg:mb-6">
+                  <h2 className="text-lg lg:text-2xl font-bold text-gray-800">
                     {editingBlog ? 'Edit Blog Post' : 'Create New Blog Post'}
                   </h2>
                   <button
                     onClick={() => setShowForm(false)}
-                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                    className="text-gray-400 hover:text-gray-600 text-xl lg:text-2xl"
                   >
                     ×
                   </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Title *

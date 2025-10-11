@@ -55,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     const adminEmails = [
       "admin@sanskritiyam.com",
       "kartik@sanskritiyam.com",
+      "nishant@sanskritiyam.com",
       "support@sanskritiyam.com",
     ];
     return adminEmails.includes(user.email) || user.email.includes("admin");
